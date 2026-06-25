@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PokÃ©dex Collector â Generation-Authentic TCG Tracker</title>
+<style>
+  :root {
+    --bg: #0a0e23;
+    --bg-2: #0f152e;
+    --panel: #161d3d;
+    --panel-2: #1d2650;
+    --text: #eef2ff;
+    --muted: #9aa6cf;
+    --gold: #ffcb05;
+    --gold-2: #f5a623;
+    --blue: #3d7dca;
+    --green: #3fd07a;
+    --orange: #ff9f43;
+    --gray: #5a6488;
+    --red: #ee5253;
+    --border: #2a3463;
+    --shadow: 0 10px 30px rgba(0,0,0,.45);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(1100px 600px at 85% -10%, #1c2a5e 0%, transparent 55%),
+      radial-gradient(900px 500px at -10% 0%, #241a4d 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--blue); }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky; top: 0; z-index: 30;
+    backdrop-filter: blur(12px);
+    background: linear-gradient(180deg, rgba(10,14,35,.95), rgba(10,14,35,.78));
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner {
+    max-width: 1240px; margin: 0 auto; padding: 14px 22px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 21px; letter-spacing: .3px; }
+  .logo .gold { color: var(--gold); }
+  .pokeball {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(var(--red) 0 50%, #fff 50% 100%);
+    border: 3px solid #0a0a0a; position: relative; box-shadow: var(--shadow); flex: 0 0 auto;
+  }
+  .pokeball::before { content:""; position:absolute; left:0; right:0; top:50%; height:3px; background:#0a0a0a; transform:translateY(-50%); }
+  .pokeball::after { content:""; position:absolute; width:9px; height:9px; border-radius:50%; background:#fff; border:3px solid #0a0a0a; left:50%; top:50%; transform:translate(-50%,-50%); }
+  .spacer { flex: 1 1 auto; }
+  .mode-switch { display: flex; background: var(--bg-2); border: 1px solid var(--border); border-radius: 999px; padding: 4px; }
+  .mode-switch button {
+    border: none; background: transparent; color: var(--muted); cursor: pointer;
+    padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 13px; transition: all .15s;
+  }
+  .mode-switch button.active { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: #1a1300; box-shadow: 0 4px 12px rgba(255,203,5,.3); }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 1240px; margin: 0 auto; padding: 22px 22px 90px; }
+
+  /* ---------- Stats dashboard ---------- */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .stat-card {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .stat-card .num { font-size: 30px; font-weight: 900; line-height: 1; }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-top: 6px; }
+  .stat-card.total .num { color: var(--gold); }
+  .stat-card.ideal .num { color: var(--green); }
+  .stat-card.backup .num { color: var(--orange); }
+  .stat-card.pct .num { color: var(--blue); }
+  .stat-card .ico { position: absolute; right: 12px; top: 10px; font-size: 26px; opacity: .25; }
+
+  /* ---------- Progress panel ---------- */
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; margin-bottom: 18px; box-shadow: var(--shadow);
+  }
+  .panel h3 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+  .overall-bar-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .overall-bar-head .t { font-weight: 800; font-size: 15px; }
+  .overall-bar-head .p { font-weight: 900; color: var(--gold); }
+  .bar { height: 13px; background: var(--bg-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  .bar > div { height: 100%; width: 0%; border-radius: 999px; transition: width .45s ease; background: linear-gradient(90deg, var(--blue), var(--green)); }
+
+  .gen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 14px; }
+  .gen-prog { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: border-color .15s, transform .1s; }
+  .gen-prog:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .gen-prog.active { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(255,203,5,.25); }
+  .gen-prog .row1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .gen-prog .name { font-weight: 800; font-size: 13px; }
+  .gen-prog .frac { font-size: 12px; color: var(--muted); }
+  .gen-prog .bar { height: 8px; }
+  .gen-prog .setname { font-size: 11px; color: var(--gold); margin-top: 6px; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 18px; box-shadow: var(--shadow); }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  input[type="text"], select {
+    background: var(--bg-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 11px; font-size: 14px; outline: none; transition: border-color .15s, box-shadow .15s; font-family: inherit;
+  }
+  input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(61,125,202,.25); }
+  .search { flex: 1 1 220px; min-width: 180px; }
+  .search input { width: 100%; }
+  .filters { display: flex; gap: 6px; }
+  .filters button { background: var(--bg-2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; padding: 9px 14px; border-radius: 999px; font-weight: 700; font-size: 13px; transition: all .15s; font-family: inherit; }
+  .filters button.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .filters button.all.active { background: var(--gold); color: #1a1300; border-color: var(--gold); }
+  .filters button.ideal.active { background: var(--green); color: #062012; border-color: var(--green); }
+  .filters button.backup.active { background: var(--orange); color: #2a1500; border-color: var(--orange); }
+  .filters button.missing.active { background: var(--gray); color: #fff; border-color: var(--gray); }
+  .tool-right { margin-left: auto; display: flex; gap: 8px; }
+  .btn { cursor: pointer; font-family: inherit; font-weight: 700; border: 1px solid var(--border); border-radius: 10px; padding: 9px 15px; font-size: 13px; background: var(--panel-2); color: var(--text); transition: all .15s; }
+  .btn:hover { background: #283163; }
+  .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: #1a1300; border: none; }
+
+  /* ---------- PokÃ©mon grid ---------- */
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); }
+  .pcard {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border); border-left: 5px solid var(--gray);
+    border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 10px; transition: transform .12s, border-color .15s;
+  }
+  .pcard:hover { transform: translateY(-3px); }
+  .pcard.s-ideal { border-left-color: var(--green); }
+  .pcard.s-backup { border-left-color: var(--orange); }
+  .pcard.s-missing { border-left-color: var(--gray); }
+  .pcard.notinset { opacity: .55; }
+  .pcard .top { display: flex; align-items: baseline; gap: 8px; }
+  .pcard .dex { font-size: 13px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .pcard .pname { font-size: 18px; font-weight: 800; }
+  .pcard .gentag { margin-left: auto; font-size: 10px; color: var(--muted); border: 1px solid var(--border); padding: 2px 7px; border-radius: 999px; }
+
+  .cardinfo { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .cardinfo .line { display: flex; align-items: center; gap: 8px; }
+  .cardinfo .tag { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); min-width: 48px; }
+  .rarity { font-weight: 700; }
+  .rarity.holo, .rarity.r-Holo.Rare { }
+  .holo-badge {
+    font-weight: 800; font-size: 11px; padding: 2px 9px; border-radius: 999px; color: #1a1300;
+    background: linear-gradient(90deg,#ff5f6d,#ffc371,#fffd87,#7afcff,#a18cd1,#ff8bd0);
+    background-size: 300% 100%; animation: holoShift 4s linear infinite;
+    box-shadow: 0 0 10px rgba(255,255,255,.25);
+  }
+  @keyframes holoShift { 0%{background-position:0% 50%} 100%{background-position:300% 50%} }
+  .r-common { color: #b9c2e6; }
+  .r-uncommon { color: var(--green); }
+  .r-rare { color: var(--blue); }
+  .notinset-txt { color: var(--gray); font-style: italic; }
+
+  .statusline { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .statusline .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.ideal { background: var(--green); } .dot.backup { background: var(--orange); } .dot.missing { background: var(--gray); }
+  .cond-pill { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; border: 1px solid var(--border); color: var(--muted); }
+
+  .actions { display: flex; gap: 6px; margin-top: 2px; }
+  .actions button { flex: 1; cursor: pointer; font-family: inherit; font-weight: 700; border: 1px solid var(--border); background: var(--bg-2); color: var(--muted); border-radius: 9px; padding: 7px 4px; font-size: 12px; transition: all .12s; }
+  .actions button:hover { border-color: var(--muted); }
+  .actions button.on-ideal { background: var(--green); color: #062012; border-color: var(--green); }
+  .actions button.on-backup { background: var(--orange); color: #2a1500; border-color: var(--orange); }
+  .actions button.on-missing { background: var(--gray); color: #fff; border-color: var(--gray); }
+  .actions button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .cond-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text); margin-top: 4px; padding: 6px 8px; background: rgba(255,203,5,.08); border: 1px solid rgba(255,203,5,.25); border-radius: 8px; }
+  .cond-row .cbtn { cursor: pointer; border: 1px solid var(--border); background: var(--bg-2); color: var(--muted); border-radius: 7px; padding: 3px 10px; font-weight: 800; font-size: 11px; font-family: inherit; }
+  .cond-row .cbtn.active { background: var(--gold); color: #1a1300; border-color: var(--gold); }
+
+  .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 60px 20px; font-size: 16px; }
+  .footer-note { text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px; }
+
+  /* ---------- Hero quick-search ---------- */
+  .hero {
+    background: linear-gradient(135deg, rgba(255,203,5,.10), rgba(61,125,202,.10)), var(--panel);
+    border: 1px solid var(--border); border-radius: 18px; padding: 22px 22px 20px;
+    margin-bottom: 20px; box-shadow: var(--shadow); position: relative;
+    border-top: 3px solid var(--gold);
+  }
+  .hero-title { font-size: 22px; font-weight: 900; letter-spacing: .3px; }
+  .hero-sub { color: var(--muted); font-size: 13px; margin: 2px 0 14px; }
+  .hero-search { display: flex; gap: 10px; }
+  .hero-search input {
+    flex: 1; font-size: 18px; padding: 14px 18px; border-radius: 12px;
+    background: var(--bg-2); border: 2px solid var(--border); color: var(--text);
+  }
+  .hero-search input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(255,203,5,.18); }
+  .quick-results { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .qr {
+    display: flex; align-items: center; gap: 14px; background: var(--bg-2);
+    border: 1px solid var(--border); border-left: 5px solid var(--gray);
+    border-radius: 12px; padding: 10px 14px;
+  }
+  .qr.s-ideal { border-left-color: var(--green); }
+  .qr.s-backup { border-left-color: var(--orange); }
+  .qr.s-missing { border-left-color: var(--gray); }
+  .qr-thumb {
+    width: 46px; height: 64px; flex: 0 0 auto; border-radius: 7px; cursor: pointer;
+    background: linear-gradient(160deg, #313a6e, #1c2342);
+    border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+    font-size: 22px; overflow: hidden; position: relative;
+  }
+  .qr-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .qr-thumb:hover { border-color: var(--gold); }
+  .qr-main { flex: 1; min-width: 0; }
+  .qr-name { font-weight: 800; font-size: 16px; }
+  .qr-name .dex { color: var(--muted); font-size: 13px; font-weight: 700; margin-right: 6px; font-variant-numeric: tabular-nums; }
+  .qr-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .qr-sub .setpill { color: var(--gold); }
+  .qr-sub .holo-badge { font-size: 10px; padding: 1px 7px; }
+  .qr-status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; margin-top: 4px; }
+  .qr-status .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .qr-actions { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; align-items: flex-end; }
+  .qr-btns { display: flex; gap: 6px; }
+  .qr-btns button {
+    cursor: pointer; font-family: inherit; font-weight: 700; font-size: 12px;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    border-radius: 8px; padding: 7px 10px; transition: all .12s; white-space: nowrap;
+  }
+  .qr-btns button:hover { border-color: var(--muted); }
+  .qr-btns button.on-ideal { background: var(--green); color: #062012; border-color: var(--green); }
+  .qr-btns button.on-backup { background: var(--orange); color: #2a1500; border-color: var(--orange); }
+  .qr-btns button.miss { color: var(--muted); }
+  .qr-btns button:disabled { opacity: .4; cursor: not-allowed; }
+  .qr-cond { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .qr-cond .cbtn { cursor: pointer; border: 1px solid var(--border); background: var(--panel-2); color: var(--muted); border-radius: 6px; padding: 2px 8px; font-weight: 800; font-size: 11px; font-family: inherit; }
+  .qr-cond .cbtn.active { background: var(--gold); color: #1a1300; border-color: var(--gold); }
+  .qr-empty { color: var(--muted); font-size: 13px; padding: 6px 2px; }
+  .qr-notinset { color: var(--gray); font-style: italic; font-size: 12px; }
+
+  /* card thumb button on main pokÃ©mon cards */
+  .view-card {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    background: var(--bg-2); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 700; font-family: inherit;
+    margin-top: 2px; align-self: flex-start; transition: all .12s;
+  }
+  .view-card:hover { border-color: var(--gold); color: var(--text); }
+
+  /* ---------- Lightbox ---------- */
+  .lightbox { position: fixed; inset: 0; background: rgba(4,6,16,.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 60; padding: 24px; }
+  .lightbox.show { display: flex; }
+  .lightbox-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 22px; max-width: 420px; width: 100%; box-shadow: var(--shadow); position: relative; }
+  .lightbox-close { position: absolute; top: 12px; right: 12px; cursor: pointer; background: var(--bg-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; width: 32px; height: 32px; font-size: 15px; font-weight: 800; }
+  .lightbox-title { font-weight: 800; font-size: 18px; margin-bottom: 14px; padding-right: 36px; }
+  .lightbox-stage { min-height: 340px; display: flex; align-items: center; justify-content: center; }
+  .lightbox-stage img { max-width: 100%; max-height: 460px; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+  .lightbox-loading, .lightbox-error { color: var(--muted); font-size: 14px; text-align: center; }
+  .lightbox-meta { color: var(--muted); font-size: 12px; margin-top: 12px; text-align: center; }
+  .lightbox-meta a { color: var(--blue); }
+
+  @media (max-width: 720px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .tool-right { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo"><span class="pokeball"></span> PokÃ©<span class="gold">dex</span> Collector</div>
+    <div class="spacer"></div>
+    <div class="mode-switch">
+      <button id="modePokedex" class="active">PokÃ©dex Mode</button>
+      <button id="modeSet">Set Mode</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Quick "mark as collected" hero search -->
+  <div class="hero">
+    <div class="hero-title">â¡ Log a Card</div>
+    <div class="hero-sub">Find a PokÃ©mon, see the card, mark it collected.</div>
+    <div class="hero-search">
+      <input type="text" id="quickSearch" placeholder="Type a PokÃ©mon nameâ¦ e.g. Charizard" autocomplete="off" />
+      <button class="btn" id="quickClear" title="Clear">â</button>
+    </div>
+    <div class="quick-results" id="quickResults"></div>
+  </div>
+
+  <!-- Stats dashboard -->
+  <div class="stats-row">
+    <div class="stat-card total"><div class="ico">ð</div><div class="num" id="statTotal">0</div><div class="lbl">Total Collected</div></div>
+    <div class="stat-card ideal"><div class="ico">â</div><div class="num" id="statIdeal">0</div><div class="lbl">Ideal (Holo)</div></div>
+    <div class="stat-card backup"><div class="ico">ð</div><div class="num" id="statBackup">0</div><div class="lbl">Backup</div></div>
+    <div class="stat-card pct"><div class="ico">ð</div><div class="num" id="statPct">0%</div><div class="lbl">Overall Complete</div></div>
+  </div>
+
+  <!-- Progress panel -->
+  <div class="panel">
+    <div class="overall-bar-head">
+      <span class="t">Overall Progress</span>
+      <span class="p" id="overallFrac">0 / 0</span>
+    </div>
+    <div class="bar"><div id="overallBar"></div></div>
+    <div class="gen-grid" id="genGrid"></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="field" id="genField">
+      <label for="genSelect">Generation</label>
+      <select id="genSelect"></select>
+    </div>
+    <div class="field">
+      <label for="setSelect">Set</label>
+      <select id="setSelect"></select>
+    </div>
+    <div class="field search">
+      <label for="search">Search</label>
+      <input type="text" id="search" placeholder="Search by PokÃ©mon nameâ¦" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label>Filter</label>
+      <div class="filters">
+        <button class="all active" data-filter="all">All</button>
+        <button class="missing" data-filter="missing">Missing</button>
+        <button class="ideal" data-filter="ideal">Ideal</button>
+        <button class="backup" data-filter="backup">Backup</button>
+      </div>
+    </div>
+    <div class="tool-right">
+      <button class="btn btn-gold" id="exportBtn">â¬ Export</button>
+      <button class="btn" id="importBtn">â¬ Import</button>
+      <button class="btn" id="resetBtn">Reset</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <p class="footer-note">Saved automatically in your browser (localStorage). English cards only Â· Conditions: NM / LP.</p>
+</main>
+
+<!-- Card image lightbox -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lightboxClose" title="Close">â</button>
+    <div class="lightbox-title" id="lightboxTitle"></div>
+    <div class="lightbox-stage" id="lightboxStage"></div>
+    <div class="lightbox-meta" id="lightboxMeta"></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="application/json" style="display:none" />
+
+<script>
+"use strict";
+
+// Generation metadata: gen number -> {name, region, range}
+const GEN_INFO = {
+  1: { name: "Gen I",   region: "Kanto",  range: [1, 151] },
+  2: { name: "Gen II",  region: "Johto",  range: [152, 251] },
+  3: { name: "Gen III", region: "Hoenn",  range: [252, 386] },
+  4: { name: "Gen IV",  region: "Sinnoh", range: [387, 493] },
+  5: { name: "Gen V",   region: "Unova",  range: [494, 649] },
+  6: { name: "Gen VI",  region: "Kalos",  range: [650, 721] },
+  7: { name: "Gen VII", region: "Alola",  range: [722, 809] },
+  8: { name: "Gen VIII",region: "Galar",  range: [810, 905] },
+  9: { name: "Gen IX",  region: "Paldea", range: [906, 1025] }
+};
+
+// Sets available per generation (English releases)
+const GEN_SETS = {
+  1: ["Base Set", "Jungle", "Fossil"],
+  2: ["Neo Genesis", "Neo Discovery", "Neo Revelation", "Neo Destiny"],
+  3: ["Ruby & Sapphire", "Sandstorm", "Dragon", "Team Magma vs Team Aqua", "Hidden Legends",
+      "FireRed & LeafGreen", "Team Rocket Returns", "Deoxys", "Emerald", "Unseen Forces",
+      "Delta Species", "Legend Maker", "Holon Phantoms", "Crystal Guardians", "Dragon Frontiers", "Power Keepers"],
+  4: ["Diamond & Pearl", "Mysterious Treasures", "Secret Wonders", "Great Encounters", "Majestic Dawn",
+      "Legends Awakened", "Stormfront", "Platinum", "Rising Rivals", "Supreme Victors", "Arceus",
+      "HeartGold SoulSilver", "Unleashed", "Undaunted", "Triumphant"],
+  5: ["Black & White", "Emerging Powers", "Noble Victories", "Next Destinies", "Dark Explorers",
+      "Dragons Exalted", "Boundaries Crossed", "Plasma Storm", "Plasma Freeze", "Plasma Blast", "Legendary Treasures"],
+  6: ["XY Base Set", "Flashfire", "Furious Fists", "Phantom Forces", "Primal Clash", "Roaring Skies",
+      "Ancient Origins", "BREAKthrough", "BREAKpoint", "Fates Collide", "Steam Siege", "Evolutions"],
+  7: ["Sun & Moon", "Guardians Rising", "Burning Shadows", "Shining Legends", "Crimson Invasion",
+      "Ultra Prism", "Forbidden Light", "Celestial Storm", "Dragon Majesty", "Lost Thunder", "Team Up",
+      "Unbroken Bonds", "Unified Minds", "Hidden Fates", "Cosmic Eclipse"],
+  8: ["Sword & Shield Base Set", "Rebel Clash", "Darkness Ablaze", "Champion's Path", "Vivid Voltage",
+      "Battle Styles", "Chilling Reign", "Evolving Skies", "Celebrations", "Fusion Strike", "Brilliant Stars",
+      "Astral Radiance", "PokÃ©mon GO", "Lost Origin", "Silver Tempest", "Crown Zenith"],
+  9: ["Scarlet & Violet Base Set", "Paldea Evolved", "Obsidian Flames", "Paradox Rift", "Paldean Fates",
+      "Temporal Forces", "Twilight Masquerade", "Shrouded Fable", "Stellar Crown", "Surging Sparks"]
+};
+
+// National Dex names, index 0 = #1. Built up in pieces below.
+const NAMES = [];
+// Gen I (#1-151)
+NAMES.push(
+  "Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise",
+  "Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot","Rattata",
+  "Raticate","Spearow","Fearow","Ekans","Arbok","Pikachu","Raichu","Sandshrew","Sandslash","Nidoranâ",
+  "Nidorina","Nidoqueen","Nidoranâ","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales",
+  "Jigglypuff","Wigglytuff","Zubat","Golbat","Oddish","Gloom","Vileplume","Paras","Parasect","Venonat",
+  "Venomoth","Diglett","Dugtrio","Meowth","Persian","Psyduck","Golduck","Mankey","Primeape","Growlithe",
+  "Arcanine","Poliwag","Poliwhirl","Poliwrath","Abra","Kadabra","Alakazam","Machop","Machoke","Machamp",
+  "Bellsprout","Weepinbell","Victreebel","Tentacool","Tentacruel","Geodude","Graveler","Golem","Ponyta",
+  "Rapidash","Slowpoke","Slowbro","Magnemite","Magneton","Farfetch'd","Doduo","Dodrio","Seel","Dewgong",
+  "Grimer","Muk","Shellder","Cloyster","Gastly","Haunter","Gengar","Onix","Drowzee","Hypno","Krabby",
+  "Kingler","Voltorb","Electrode","Exeggcute","Exeggutor","Cubone","Marowak","Hitmonlee","Hitmonchan",
+  "Lickitung","Koffing","Weezing","Rhyhorn","Rhydon","Chansey","Tangela","Kangaskhan","Horsea","Seadra",
+  "Goldeen","Seaking","Staryu","Starmie","Mr. Mime","Scyther","Jynx","Electabuzz","Magmar","Pinsir","Tauros",
+  "Magikarp","Gyarados","Lapras","Ditto","Eevee","Vaporeon","Jolteon","Flareon","Porygon","Omanyte","Omastar",
+  "Kabuto","Kabutops","Aerodactyl","Snorlax","Articuno","Zapdos","Moltres","Dratini","Dragonair","Dragonite",
+  "Mewtwo","Mew"
+);
+// Gen II (#152-251)
+NAMES.push(
+  "Chikorita","Bayleef","Meganium","Cyndaquil","Quilava","Typhlosion","Totodile","Croconaw","Feraligatr",
+  "Sentret","Furret","Hoothoot","Noctowl","Ledyba","Ledian","Spinarak","Ariados","Crobat","Chinchou",
+  "Lanturn","Pichu","Cleffa","Igglybuff","Togepi","Togetic","Natu","Xatu","Mareep","Flaaffy","Ampharos",
+  "Bellossom","Marill","Azumarill","Sudowoodo","Politoed","Hoppip","Skiploom","Jumpluff","Aipom","Sunkern",
+  "Sunflora","Yanma","Wooper","Quagsire","Espeon","Umbreon","Murkrow","Slowking","Misdreavus","Unown",
+  "Wobbuffet","Girafarig","Pineco","Forretress","Dunsparce","Gligar","Steelix","Snubbull","Granbull",
+  "Qwilfish","Scizor","Shuckle","Heracross","Sneasel","Teddiursa","Ursaring","Slugma","Magcargo","Swinub",
+  "Piloswine","Corsola","Remoraid","Octillery","Delibird","Mantine","Skarmory","Houndour","Houndoom",
+  "Kingdra","Phanpy","Donphan","Porygon2","Stantler","Smeargle","Tyrogue","Hitmontop","Smoochum","Elekid",
+  "Magby","Miltank","Blissey","Raikou","Entei","Suicune","Larvitar","Pupitar","Tyranitar","Lugia","Ho-Oh","Celebi"
+);
+// Gen III (#252-386)
+NAMES.push(
+  "Treecko","Grovyle","Sceptile","Torchic","Combusken","Blaziken","Mudkip","Marshtomp","Swampert","Poochyena",
+  "Mightyena","Zigzagoon","Linoone","Wurmple","Silcoon","Beautifly","Cascoon","Dustox","Lotad","Lombre",
+  "Ludicolo","Seedot","Nuzleaf","Shiftry","Taillow","Swellow","Wingull","Pelipper","Ralts","Kirlia","Gardevoir",
+  "Surskit","Masquerain","Shroomish","Breloom","Slakoth","Vigoroth","Slaking","Nincada","Ninjask","Shedinja",
+  "Whismur","Loudred","Exploud","Makuhita","Hariyama","Azurill","Nosepass","Skitty","Delcatty","Sableye",
+  "Mawile","Aron","Lairon","Aggron","Meditite","Medicham","Electrike","Manectric","Plusle","Minun","Volbeat",
+  "Illumise","Roselia","Gulpin","Swalot","Carvanha","Sharpedo","Wailmer","Wailord","Numel","Camerupt","Torkoal",
+  "Spoink","Grumpig","Spinda","Trapinch","Vibrava","Flygon","Cacnea","Cacturne","Swablu","Altaria","Zangoose",
+  "Seviper","Lunatone","Solrock","Barboach","Whiscash","Corphish","Crawdaunt","Baltoy","Claydol","Lileep",
+  "Cradily","Anorith","Armaldo","Feebas","Milotic","Castform","Kecleon","Shuppet","Banette","Duskull","Dusclops",
+  "Tropius","Chimecho","Absol","Wynaut","Snorunt","Glalie","Spheal","Sealeo","Walrein","Clamperl","Huntail",
+  "Gorebyss","Relicanth","Luvdisc","Bagon","Shelgon","Salamence","Beldum","Metang","Metagross","Regirock",
+  "Regice","Registeel","Latias","Latios","Kyogre","Groudon","Rayquaza","Jirachi","Deoxys"
+);
+// Gen IV (#387-493)
+NAMES.push(
+  "Turtwig","Grotle","Torterra","Chimchar","Monferno","Infernape","Piplup","Prinplup","Empoleon","Starly",
+  "Staravia","Staraptor","Bidoof","Bibarel","Kricketot","Kricketune","Shinx","Luxio","Luxray","Budew","Roserade",
+  "Cranidos","Rampardos","Shieldon","Bastiodon","Burmy","Wormadam","Mothim","Combee","Vespiquen","Pachirisu",
+  "Buizel","Floatzel","Cherubi","Cherrim","Shellos","Gastrodon","Ambipom","Drifloon","Drifblim","Buneary",
+  "Lopunny","Mismagius","Honchkrow","Glameow","Purugly","Chingling","Stunky","Skuntank","Bronzor","Bronzong",
+  "Bonsly","Mime Jr.","Happiny","Chatot","Spiritomb","Gible","Gabite","Garchomp","Munchlax","Riolu","Lucario",
+  "Hippopotas","Hippowdon","Skorupi","Drapion","Croagunk","Toxicroak","Carnivine","Finneon","Lumineon","Mantyke",
+  "Snover","Abomasnow","Weavile","Magnezone","Lickilicky","Rhyperior","Tangrowth","Electivire","Magmortar",
+  "Togekiss","Yanmega","Leafeon","Glaceon","Gliscor","Mamoswine","Porygon-Z","Gallade","Probopass","Dusknoir",
+  "Froslass","Rotom","Uxie","Mesprit","Azelf","Dialga","Palkia","Heatran","Regigigas","Giratina","Cresselia",
+  "Phione","Manaphy","Darkrai","Shaymin","Arceus"
+);
+// Gen V (#494-649)
+NAMES.push(
+  "Victini","Snivy","Servine","Serperior","Tepig","Pignite","Emboar","Oshawott","Dewott","Samurott","Patrat",
+  "Watchog","Lillipup","Herdier","Stoutland","Purrloin","Liepard","Pansage","Simisage","Pansear","Simisear",
+  "Panpour","Simipour","Munna","Musharna","Pidove","Tranquill","Unfezant","Blitzle","Zebstrika","Roggenrola",
+  "Boldore","Gigalith","Woobat","Swoobat","Drilbur","Excadrill","Audino","Timburr","Gurdurr","Conkeldurr",
+  "Tympole","Palpitoad","Seismitoad","Throh","Sawk","Sewaddle","Swadloon","Leavanny","Venipede","Whirlipede",
+  "Scolipede","Cottonee","Whimsicott","Petilil","Lilligant","Basculin","Sandile","Krokorok","Krookodile",
+  "Darumaka","Darmanitan","Maractus","Dwebble","Crustle","Scraggy","Scrafty","Sigilyph","Yamask","Cofagrigus",
+  "Tirtouga","Carracosta","Archen","Archeops","Trubbish","Garbodor","Zorua","Zoroark","Minccino","Cinccino",
+  "Gothita","Gothorita","Gothitelle","Solosis","Duosion","Reuniclus","Ducklett","Swanna","Vanillite","Vanillish",
+  "Vanilluxe","Deerling","Sawsbuck","Emolga","Karrablast","Escavalier","Foongus","Amoonguss","Frillish",
+  "Jellicent","Alomomola","Joltik","Galvantula","Ferroseed","Ferrothorn","Klink","Klang","Klinklang","Tynamo",
+  "Eelektrik","Eelektross","Elgyem","Beheeyem","Litwick","Lampent","Chandelure","Axew","Fraxure","Haxorus",
+  "Cubchoo","Beartic","Cryogonal","Shelmet","Accelgor","Stunfisk","Mienfoo","Mienshao","Druddigon","Golett",
+  "Golurk","Pawniard","Bisharp","Bouffalant","Rufflet","Braviary","Vullaby","Mandibuzz","Heatmor","Durant",
+  "Deino","Zweilous","Hydreigon","Larvesta","Volcarona","Cobalion","Terrakion","Virizion","Tornadus","Thundurus",
+  "Reshiram","Zekrom","Landorus","Kyurem","Keldeo","Meloetta","Genesect"
+);
+// Gen VI (#650-721)
+NAMES.push(
+  "Chespin","Quilladin","Chesnaught","Fennekin","Braixen","Delphox","Froakie","Frogadier","Greninja","Bunnelby",
+  "Diggersby","Fletchling","Fletchinder","Talonflame","Scatterbug","Spewpa","Vivillon","Litleo","Pyroar",
+  "FlabÃ©bÃ©","Floette","Florges","Skiddo","Gogoat","Pancham","Pangoro","Furfrou","Espurr","Meowstic","Honedge",
+  "Doublade","Aegislash","Spritzee","Aromatisse","Swirlix","Slurpuff","Inkay","Malamar","Binacle","Barbaracle",
+  "Skrelp","Dragalge","Clauncher","Clawitzer","Helioptile","Heliolisk","Tyrunt","Tyrantrum","Amaura","Aurorus",
+  "Sylveon","Hawlucha","Dedenne","Carbink","Goomy","Sliggoo","Goodra","Klefki","Phantump","Trevenant",
+  "Pumpkaboo","Gourgeist","Bergmite","Avalugg","Noibat","Noivern","Xerneas","Yveltal","Zygarde","Diancie",
+  "Hoopa","Volcanion"
+);
+// Gen VII (#722-809)
+NAMES.push(
+  "Rowlet","Dartrix","Decidueye","Litten","Torracat","Incineroar","Popplio","Brionne","Primarina","Pikipek",
+  "Trumbeak","Toucannon","Yungoos","Gumshoos","Grubbin","Charjabug","Vikavolt","Crabrawler","Crabominable",
+  "Oricorio","Cutiefly","Ribombee","Rockruff","Lycanroc","Wishiwashi","Mareanie","Toxapex","Mudbray","Mudsdale",
+  "Dewpider","Araquanid","Fomantis","Lurantis","Morelull","Shiinotic","Salandit","Salazzle","Stufful","Bewear",
+  "Bounsweet","Steenee","Tsareena","Comfey","Oranguru","Passimian","Wimpod","Golisopod","Sandygast","Palossand",
+  "Pyukumuku","Type: Null","Silvally","Minior","Komala","Turtonator","Togedemaru","Mimikyu","Bruxish","Drampa",
+  "Dhelmise","Jangmo-o","Hakamo-o","Kommo-o","Tapu Koko","Tapu Lele","Tapu Bulu","Tapu Fini","Cosmog","Cosmoem",
+  "Solgaleo","Lunala","Nihilego","Buzzwole","Pheromosa","Xurkitree","Celesteela","Kartana","Guzzlord","Necrozma",
+  "Magearna","Marshadow","Poipole","Naganadel","Stakataka","Blacephalon","Zeraora","Meltan","Melmetal"
+);
+// Gen VIII (#810-905)
+NAMES.push(
+  "Grookey","Thwackey","Rillaboom","Scorbunny","Raboot","Cinderace","Sobble","Drizzile","Inteleon","Skwovet",
+  "Greedent","Rookidee","Corvisquire","Corviknight","Blipbug","Dottler","Orbeetle","Nickit","Thievul",
+  "Gossifleur","Eldegoss","Wooloo","Dubwool","Chewtle","Drednaw","Yamper","Boltund","Rolycoly","Carkol",
+  "Coalossal","Applin","Flapple","Appletun","Silicobra","Sandaconda","Cramorant","Arrokuda","Barraskewda",
+  "Toxel","Toxtricity","Sizzlipede","Centiskorch","Clobbopus","Grapploct","Sinistea","Polteageist","Hatenna",
+  "Hattrem","Hatterene","Impidimp","Morgrem","Grimmsnarl","Obstagoon","Perrserker","Cursola","Sirfetch'd",
+  "Mr. Rime","Runerigus","Milcery","Alcremie","Falinks","Pincurchin","Snom","Frosmoth","Stonjourner","Eiscue",
+  "Indeedee","Morpeko","Cufant","Copperajah","Dracozolt","Arctozolt","Dracovish","Arctovish","Duraludon",
+  "Dreepy","Drakloak","Dragapult","Zacian","Zamazenta","Eternatus","Kubfu","Urshifu","Zarude","Regieleki",
+  "Regidrago","Glastrier","Spectrier","Calyrex","Wyrdeer","Kleavor","Ursaluna","Basculegion","Sneasler",
+  "Overqwil","Enamorus"
+);
+// Gen IX (#906-1025)
+NAMES.push(
+  "Sprigatito","Floragato","Meowscarada","Fuecoco","Crocalor","Skeledirge","Quaxly","Quaxwell","Quaquaval",
+  "Lechonk","Oinkologne","Tarountula","Spidops","Nymble","Lokix","Pawmi","Pawmo","Pawmot","Tandemaus","Maushold",
+  "Fidough","Dachsbun","Smoliv","Dolliv","Arboliva","Squawkabilly","Nacli","Naclstack","Garganacl","Charcadet",
+  "Armarouge","Ceruledge","Tadbulb","Bellibolt","Wattrel","Kilowattrel","Maschiff","Mabosstiff","Shroodle",
+  "Grafaiai","Bramblin","Brambleghast","Toedscool","Toedscruel","Klawf","Capsakid","Scovillain","Rellor",
+  "Rabsca","Flittle","Espathra","Tinkatink","Tinkatuff","Tinkaton","Wiglett","Wugtrio","Bombirdier","Finizen",
+  "Palafin","Varoom","Revavroom","Cyclizar","Orthworm","Glimmet","Glimmora","Greavard","Houndstone","Flamigo",
+  "Cetoddle","Cetitan","Veluza","Dondozo","Tatsugiri","Annihilape","Clodsire","Farigiraf","Dudunsparce",
+  "Kingambit","Great Tusk","Scream Tail","Brute Bonnet","Flutter Mane","Slither Wing","Sandy Shocks","Iron Treads",
+  "Iron Bundle","Iron Hands","Iron Jugulis","Iron Moth","Iron Thorns","Frigibax","Arctibax","Baxcalibur",
+  "Gimmighoul","Gholdengo","Wo-Chien","Chien-Pao","Ting-Lu","Chi-Yu","Roaring Moon","Iron Valiant","Koraidon",
+  "Miraidon","Walking Wake","Iron Leaves","Dipplin","Poltchageist","Sinistcha","Okidogi","Munkidori",
+  "Fezandipiti","Ogerpon","Archaludon","Hydrapple","Gouging Fire","Raging Bolt","Iron Boulder","Iron Crown",
+  "Terapagos","Pecharunt"
+);
+// ---------------------------------------------------------------------------
+//  POKEMON TCG API IMAGE SUPPORT
+//  setName -> official pokemontcg.io set id (images.pokemontcg.io/{setId}/{num}.png)
+// ---------------------------------------------------------------------------
+const SET_IDS = {
+  "Base Set": "base1", "Jungle": "base2", "Fossil": "base3",
+  "Neo Genesis": "neo1", "Neo Discovery": "neo2", "Neo Revelation": "neo3", "Neo Destiny": "neo4",
+  "Ruby & Sapphire": "ex1", "Sandstorm": "ex2", "Dragon": "ex3", "Team Magma vs Team Aqua": "ex4",
+  "Hidden Legends": "ex5", "FireRed & LeafGreen": "ex6", "Team Rocket Returns": "ex7", "Deoxys": "ex8",
+  "Emerald": "ex9", "Unseen Forces": "ex10", "Delta Species": "ex11", "Legend Maker": "ex12",
+  "Holon Phantoms": "ex13", "Crystal Guardians": "ex14", "Dragon Frontiers": "ex15", "Power Keepers": "ex16",
+  "Diamond & Pearl": "dp1", "Mysterious Treasures": "dp2", "Secret Wonders": "dp3", "Great Encounters": "dp4",
+  "Majestic Dawn": "dp5", "Legends Awakened": "dp6", "Stormfront": "dp7", "Platinum": "pl1",
+  "Rising Rivals": "pl2", "Supreme Victors": "pl3", "Arceus": "pl4", "HeartGold SoulSilver": "hgss1",
+  "Unleashed": "hgss2", "Undaunted": "hgss3", "Triumphant": "hgss4",
+  "Black & White": "bw1", "Emerging Powers": "bw2", "Noble Victories": "bw3", "Next Destinies": "bw4",
+  "Dark Explorers": "bw5", "Dragons Exalted": "bw6", "Boundaries Crossed": "bw7", "Plasma Storm": "bw8",
+  "Plasma Freeze": "bw9", "Plasma Blast": "bw10", "Legendary Treasures": "bw11",
+  "XY Base Set": "xy1", "Flashfire": "xy2", "Furious Fists": "xy3", "Phantom Forces": "xy4",
+  "Primal Clash": "xy5", "Roaring Skies": "xy6", "Ancient Origins": "xy7", "BREAKthrough": "xy8",
+  "BREAKpoint": "xy9", "Fates Collide": "xy10", "Steam Siege": "xy11", "Evolutions": "xy12",
+  "Sun & Moon": "sm1", "Guardians Rising": "sm2", "Burning Shadows": "sm3", "Shining Legends": "sm35",
+  "Crimson Invasion": "sm4", "Ultra Prism": "sm5", "Forbidden Light": "sm6", "Celestial Storm": "sm7",
+  "Dragon Majesty": "sm75", "Lost Thunder": "sm8", "Team Up": "sm9", "Unbroken Bonds": "sm10",
+  "Unified Minds": "sm11", "Hidden Fates": "sm115", "Cosmic Eclipse": "sm12",
+  "Sword & Shield Base Set": "swsh1", "Rebel Clash": "swsh2", "Darkness Ablaze": "swsh3",
+  "Champion's Path": "swsh35", "Vivid Voltage": "swsh4", "Battle Styles": "swsh5", "Chilling Reign": "swsh6",
+  "Evolving Skies": "swsh7", "Celebrations": "cel25", "Fusion Strike": "swsh8", "Brilliant Stars": "swsh9",
+  "Astral Radiance": "swsh10", "PokÃ©mon GO": "pgo", "Lost Origin": "swsh11", "Silver Tempest": "swsh12",
+  "Crown Zenith": "swsh12pt5",
+  "Scarlet & Violet Base Set": "sv1", "Paldea Evolved": "sv2", "Obsidian Flames": "sv3",
+  "Paradox Rift": "sv4", "Paldean Fates": "sv4pt5", "Temporal Forces": "sv5", "Twilight Masquerade": "sv6",
+  "Shrouded Fable": "sv6pt5", "Stellar Crown": "sv7", "Surging Sparks": "sv8"
+};
+
+// Known card numbers within a set: CARD_NUMBERS[setId][dexId] = number-in-set.
+// Used to build a direct image URL; otherwise we fall back to the API name search.
+const CARD_NUMBERS = {};
+function setNums(setId, map) { CARD_NUMBERS[setId] = map; }
+// Base Set (base1) â real numbering. dexId -> card number in set.
+setNums("base1", {
+  // Holos #1-16 (alphabetical by card name)
+  65:1, 9:2, 113:3, 6:4, 35:5, 130:6, 107:7, 68:8, 82:9, 150:10, 34:11, 38:12, 62:13, 26:14, 3:15, 145:16,
+  // Non-holo rares #17-32
+  15:17, 148:18, 51:19, 125:20, 101:21, 17:22, 59:23, 5:24, 87:25, 147:26, 83:27, 58:28, 93:29, 2:30, 124:31, 64:32,
+  // Uncommons #33-42
+  14:33, 67:34, 129:35, 126:36, 33:37, 61:38, 137:39, 20:40, 86:41, 8:42,
+  // Commons #43-69 (PokÃ©mon): Metapod=54, Starmie=64
+  63:43, 1:44, 10:45, 4:46, 50:47, 84:48, 96:49, 92:50, 109:51, 66:52, 81:53, 11:54, 32:55,
+  95:56, 16:57, 25:58, 60:59, 77:60, 19:61, 27:62, 7:63, 121:64, 120:65, 114:66, 100:67, 37:68, 13:69
+});
+// Jungle (base2) â real numbering. dexId -> card number in set.
+setNums("base2", {
+  // Holos #1-16 (alphabetical by card name)
+  36:1, 101:2, 136:3, 135:4, 115:5, 122:6, 31:7, 18:8, 127:9, 123:10, 143:11, 134:12, 49:13, 71:14, 45:15, 40:16,
+  // Uncommons #33-48
+  12:33, 85:34, 103:35, 22:36, 44:37, 108:38, 105:39, 30:40, 47:41, 53:42, 57:43, 78:44, 112:45, 119:46, 128:47, 70:48,
+  // Commons #49-64
+  69:49, 104:50, 133:51, 102:52, 118:53, 39:54, 56:55, 52:56, 29:57, 43:58, 46:59, 25:60, 111:61, 21:62, 48:63, 37:64
+});
+// Fossil (base3) â real numbering. dexId -> card number in set.
+setNums("base3", {
+  // Holos #1-15 (alphabetical by card name)
+  142:1, 144:2, 132:3, 149:4, 94:5, 93:6, 106:7, 97:8, 141:9, 131:10, 82:11, 146:12, 89:13, 26:14, 145:15,
+  // Uncommons #31-43
+  24:31, 91:32, 92:33, 42:34, 75:35, 99:36, 126:37, 139:38, 28:39, 117:40, 80:41, 73:42, 110:43,
+  // Commons #44-55
+  23:44, 74:45, 88:46, 116:47, 140:48, 98:49, 138:50, 54:51, 90:52, 79:53, 72:54, 41:55
+});
+// ---------------------------------------------------------------------------
+//  CARD DATABASE
+//  SET_DATA[setName][pokemonName] = "Holo Rare" | "Rare" | "Uncommon" | "Common"
+//  Absence of an entry = "Not in this set."  Holo Rare => an "ideal" holo exists.
+// ---------------------------------------------------------------------------
+const SET_DATA = {};
+function addSet(set, holos, rares, uncommons, commons) {
+  const m = SET_DATA[set] = SET_DATA[set] || {};
+  (commons   || []).forEach(function (n) { m[n] = "Common"; });
+  (uncommons || []).forEach(function (n) { m[n] = "Uncommon"; });
+  (rares     || []).forEach(function (n) { m[n] = "Rare"; });
+  (holos     || []).forEach(function (n) { m[n] = "Holo Rare"; }); // holo always wins
+}
+
+/* ===== Gen I â Base Set (authentic 1999 checklist) ===== */
+addSet("Base Set",
+  // Holo Rares â the only 16 holos in Base Set (cards #1-16)
+  ["Alakazam","Blastoise","Chansey","Charizard","Clefairy","Gyarados","Hitmonchan","Machamp","Magneton",
+   "Mewtwo","Nidoking","Ninetales","Poliwrath","Raichu","Venusaur","Zapdos"],
+  // non-holo Rares (#17-22)
+  ["Beedrill","Dragonair","Dugtrio","Electabuzz","Electrode","Pidgeotto"],
+  // Uncommons (#23-42)
+  ["Arcanine","Charmeleon","Dewgong","Dratini","Farfetch'd","Growlithe","Haunter","Ivysaur","Jynx","Kadabra",
+   "Kakuna","Machoke","Magikarp","Magmar","Nidorino","Poliwhirl","Porygon","Raticate","Seel","Wartortle"],
+  // Commons (#43-69)
+  ["Abra","Bulbasaur","Caterpie","Charmander","Diglett","Doduo","Drowzee","Gastly","Koffing","Machop",
+   "Magnemite","Metapod","Nidoranâ","Onix","Pidgey","Pikachu","Poliwag","Ponyta","Rattata","Sandshrew",
+   "Squirtle","Starmie","Staryu","Tangela","Voltorb","Vulpix","Weedle"]
+);
+/* ===== Gen I â Jungle (authentic checklist) ===== */
+addSet("Jungle",
+  // Holo Rares â 16 holos (#1-16)
+  ["Clefable","Electrode","Flareon","Jolteon","Kangaskhan","Mr. Mime","Nidoqueen","Pidgeot","Pinsir","Scyther",
+   "Snorlax","Vaporeon","Venomoth","Victreebel","Vileplume","Wigglytuff"],
+  [],
+  // Uncommons (16)
+  ["Butterfree","Dodrio","Exeggutor","Fearow","Gloom","Lickitung","Marowak","Nidorina","Parasect","Persian",
+   "Primeape","Rapidash","Rhydon","Seaking","Tauros","Weepinbell"],
+  // Commons (16)
+  ["Bellsprout","Cubone","Eevee","Exeggcute","Goldeen","Jigglypuff","Mankey","Meowth","Nidoranâ","Oddish",
+   "Paras","Pikachu","Rhyhorn","Spearow","Venonat","Vulpix"]
+);
+
+/* ===== Gen I â Fossil (authentic checklist) ===== */
+addSet("Fossil",
+  // Holo Rares â 15 holos (#1-15). Raichu is a Fossil holo; Rhydon is NOT in Fossil;
+  // Slowbro is an uncommon, not a holo.
+  ["Aerodactyl","Articuno","Ditto","Dragonite","Gengar","Haunter","Hitmonlee","Hypno","Kabutops","Lapras",
+   "Magneton","Moltres","Muk","Raichu","Zapdos"],
+  [],
+  // Uncommons (13)
+  ["Arbok","Cloyster","Gastly","Golbat","Graveler","Kingler","Magmar","Omastar","Sandslash","Seadra",
+   "Slowbro","Tentacruel","Weezing"],
+  // Commons (12)
+  ["Ekans","Geodude","Grimer","Horsea","Kabuto","Krabby","Omanyte","Psyduck","Shellder","Slowpoke",
+   "Tentacool","Zubat"]
+);
+/* ===== Gen II (representative) ===== */
+addSet("Neo Genesis",
+  ["Lugia","Typhlosion","Meganium","Feraligatr","Ampharos","Steelix","Jumpluff","Pichu","Slowking","Magby"],
+  ["Azumarill","Bellossom","Skarmory"],
+  ["Quilava","Bayleef","Croconaw","Flaaffy","Togetic","Cleffa"],
+  ["Cyndaquil","Chikorita","Totodile","Mareep","Sentret","Hoothoot","Igglybuff","Togepi","Elekid"]);
+addSet("Neo Revelation",
+  ["Ho-Oh","Raikou","Entei","Suicune","Kingdra","Crobat","Misdreavus","Houndoom","Espeon","Umbreon"],
+  ["Delibird","Scizor"], ["Larvitar","Pupitar","Murkrow"], ["Slugma","Remoraid","Mantine"]);
+addSet("Neo Destiny",
+  ["Celebi","Tyranitar","Porygon2","Magcargo","Forretress"],
+  ["Sneasel","Houndour"], ["Wobbuffet","Girafarig"], ["Phanpy","Donphan","Smeargle"]);
+addSet("Neo Discovery",
+  ["Heracross","Politoed","Unown","Yanma"], ["Ariados","Octillery"], ["Quagsire","Pineco"], ["Wooper","Spinarak","Hoppip"]);
+
+/* ===== Gen III (representative) ===== */
+addSet("Ruby & Sapphire",
+  ["Blaziken","Sceptile","Swampert","Gardevoir","Mightyena","Slaking","Delcatty","Hariyama","Sableye"],
+  ["Manectric","Camerupt","Breloom"],
+  ["Combusken","Grovyle","Marshtomp","Kirlia","Vigoroth"],
+  ["Torchic","Treecko","Mudkip","Ralts","Poochyena","Zigzagoon","Whismur","Makuhita"]);
+addSet("Dragon",
+  ["Rayquaza","Salamence","Flygon","Altaria","Kingdra"], ["Shelgon","Vibrava"], ["Bagon","Trapinch","Swablu"], []);
+addSet("Hidden Legends",
+  ["Latias","Latios","Regirock","Regice","Registeel","Metagross"], ["Metang","Claydol"], ["Beldum","Baltoy"], []);
+addSet("Emerald",
+  ["Kyogre","Groudon","Milotic","Salamence","Aggron"], ["Feebas","Lairon"], ["Aron","Spheal"], ["Spheal"]);
+addSet("Deoxys", ["Deoxys","Rayquaza"], [], [], []);
+
+/* ===== Gen IV (representative) ===== */
+addSet("Diamond & Pearl",
+  ["Dialga","Palkia","Torterra","Infernape","Empoleon","Staraptor","Luxray","Roserade"],
+  ["Bibarel","Kricketune"],
+  ["Grotle","Monferno","Prinplup","Luxio","Staravia"],
+  ["Turtwig","Chimchar","Piplup","Shinx","Starly","Bidoof","Budew"]);
+addSet("Platinum", ["Giratina","Garchomp","Lucario","Magnezone","Froslass"], ["Gabite","Drapion"], ["Gible","Riolu"], []);
+addSet("Great Encounters", ["Darkrai","Leafeon","Glaceon","Gallade"], ["Roserade"], ["Gardevoir"], []);
+addSet("Majestic Dawn", ["Leafeon","Glaceon","Manaphy","Phione"], [], ["Eevee"], []);
+addSet("Arceus", ["Arceus","Heatran","Garchomp","Rhyperior"], ["Probopass"], [], []);
+addSet("Stormfront", ["Dusknoir","Regigigas","Raichu"], [], [], []);
+addSet("HeartGold SoulSilver", ["Ho-Oh","Lugia","Typhlosion","Meganium","Feraligatr"], ["Cyndaquil"], ["Quilava"], ["Chikorita","Totodile"]);
+addSet("Triumphant", ["Mamoswine","Tangrowth","Electivire","Magmortar","Gliscor"], [], [], []);
+
+/* ===== Gen V (representative) ===== */
+addSet("Black & White",
+  ["Reshiram","Zekrom","Serperior","Emboar","Samurott","Zoroark","Klinklang"],
+  ["Stoutland","Excadrill"],
+  ["Servine","Pignite","Dewott","Zorua"],
+  ["Snivy","Tepig","Oshawott","Lillipup","Patrat","Purrloin"]);
+addSet("Noble Victories", ["Victini","Cobalion","Terrakion","Virizion","Excadrill"], [], [], []);
+addSet("Plasma Storm", ["Kyurem","Lugia","Thundurus","Tornadus"], [], [], []);
+addSet("Plasma Blast", ["Genesect","Kyurem"], [], [], []);
+addSet("Legendary Treasures", ["Reshiram","Zekrom","Kyurem","Hydreigon","Volcarona"], ["Zweilous"], ["Deino","Larvesta"], []);
+addSet("Dragons Exalted", ["Rayquaza","Hydreigon","Garchomp","Haxorus","Altaria"], ["Fraxure"], ["Axew"], []);
+addSet("Boundaries Crossed", ["Keldeo","Kyurem","Landorus"], [], [], []);
+addSet("Next Destinies", ["Reshiram","Zekrom","Mewtwo","Kyurem"], [], [], []);
+addSet("Dark Explorers", ["Darkrai","Tornadus","Zoroark"], [], [], []);
+/* ===== Gen VI (representative) ===== */
+addSet("XY Base Set",
+  ["Xerneas","Yveltal","Chesnaught","Delphox","Greninja","Talonflame","Pyroar"],
+  ["Diggersby","Vivillon"],
+  ["Quilladin","Braixen","Frogadier","Litleo"],
+  ["Chespin","Fennekin","Froakie","Bunnelby","Fletchling","Scatterbug"]);
+addSet("Flashfire", ["Charizard","Pyroar","Talonflame","Magmar","Magmortar"], [], [], []);
+addSet("Roaring Skies", ["Rayquaza","Zapdos","Articuno","Moltres"], [], [], []);
+addSet("Ancient Origins", ["Mewtwo","Hoopa","Groudon","Kyogre"], [], [], []);
+addSet("Fates Collide", ["Zygarde","Lugia","Alakazam","Mewtwo"], [], [], []);
+addSet("Steam Siege", ["Volcanion","Gyarados","Steelix","Magearna"], [], [], []);
+addSet("Evolutions", ["Charizard","Mewtwo","Blastoise","Venusaur","Mew"], ["Dragonite"], ["Charmeleon"], ["Charmander","Pikachu"]);
+addSet("Primal Clash", ["Groudon","Kyogre","Gardevoir","Aggron"], [], [], []);
+addSet("BREAKthrough", ["Mewtwo","Zoroark","Florges","Noivern"], [], ["Noibat"], []);
+
+/* ===== Gen VII (representative) ===== */
+addSet("Sun & Moon",
+  ["Solgaleo","Lunala","Decidueye","Incineroar","Primarina","Lycanroc"],
+  ["Gumshoos","Toucannon"],
+  ["Dartrix","Torracat","Brionne","Charjabug"],
+  ["Rowlet","Litten","Popplio","Pikipek","Yungoos","Grubbin","Rockruff"]);
+addSet("Guardians Rising", ["Tapu Koko","Tapu Lele","Vikavolt","Lurantis","Toxapex"], [], [], []);
+addSet("Burning Shadows", ["Necrozma","Ho-Oh","Charizard","Tapu Bulu","Salazzle"], [], [], []);
+addSet("Crimson Invasion", ["Necrozma","Nihilego","Buzzwole","Guzzlord"], [], [], []);
+addSet("Ultra Prism", ["Dialga","Palkia","Solgaleo","Lunala","Tapu Fini"], [], [], []);
+addSet("Forbidden Light", ["Necrozma","Greninja","Naganadel","Zygarde"], [], [], []);
+addSet("Lost Thunder", ["Lugia","Tapu Koko","Blacephalon","Zeraora"], [], [], []);
+addSet("Cosmic Eclipse", ["Arceus","Solgaleo","Lunala","Naganadel"], [], [], []);
+addSet("Shining Legends", ["Ho-Oh","Mewtwo","Zoroark","Raikou"], [], [], []);
+addSet("Hidden Fates", ["Charizard","Moltres","Zapdos","Articuno","Mewtwo"], [], [], []);
+
+/* ===== Gen VIII (representative) ===== */
+addSet("Sword & Shield Base Set",
+  ["Zacian","Zamazenta","Rillaboom","Cinderace","Inteleon","Corviknight"],
+  ["Greedent","Dubwool"],
+  ["Thwackey","Raboot","Drizzile","Drednaw"],
+  ["Grookey","Scorbunny","Sobble","Skwovet","Rookidee","Wooloo","Chewtle"]);
+addSet("Darkness Ablaze", ["Eternatus","Charizard","Grimmsnarl","Centiskorch"], [], [], []);
+addSet("Chilling Reign", ["Calyrex","Glastrier","Spectrier","Articuno"], [], [], []);
+addSet("Evolving Skies", ["Rayquaza","Sylveon","Umbreon","Dragapult","Duraludon"], [], [], []);
+addSet("Brilliant Stars", ["Arceus","Charizard","Dragapult","Whimsicott"], [], [], []);
+addSet("Astral Radiance", ["Dialga","Palkia","Garchomp","Goodra"], [], [], []);
+addSet("Crown Zenith", ["Zacian","Zamazenta","Mewtwo","Lugia","Ho-Oh"], [], [], []);
+addSet("Vivid Voltage", ["Pikachu","Zekrom","Togekiss","Orbeetle"], [], [], []);
+addSet("Lost Origin", ["Giratina","Aerodactyl","Enamorus","Kyurem"], [], [], []);
+
+/* ===== Gen IX (representative) ===== */
+addSet("Scarlet & Violet Base Set",
+  ["Koraidon","Miraidon","Meowscarada","Skeledirge","Quaquaval","Gardevoir","Arcanine"],
+  ["Oinkologne","Pawmot"],
+  ["Floragato","Crocalor","Quaxwell","Maushold"],
+  ["Sprigatito","Fuecoco","Quaxly","Lechonk","Tarountula","Pawmi","Fidough"]);
+addSet("Paldea Evolved", ["Chien-Pao","Ting-Lu","Dondozo","Tatsugiri","Tinkaton"], [], [], []);
+addSet("Obsidian Flames", ["Charizard","Tyranitar","Kingambit","Revavroom"], [], [], []);
+addSet("Paradox Rift", ["Roaring Moon","Iron Valiant","Iron Hands","Walking Wake"], [], [], []);
+addSet("Paldean Fates", ["Charizard","Mew","Great Tusk","Iron Treads"], [], [], []);
+addSet("Temporal Forces", ["Gouging Fire","Raging Bolt","Iron Crown","Iron Boulder"], [], [], []);
+addSet("Twilight Masquerade", ["Ogerpon","Sinistcha","Dipplin","Ursaluna"], [], [], []);
+addSet("Stellar Crown", ["Terapagos","Gholdengo","Cinderace","Hydrapple"], [], [], []);
+addSet("Surging Sparks", ["Pikachu","Miraidon","Exeggutor","Wo-Chien"], [], [], []);
+addSet("Shrouded Fable", ["Pecharunt","Fezandipiti","Okidogi","Munkidori"], [], [], []);
+// ---------------------------------------------------------------------------
+//  DERIVED DATA
+// ---------------------------------------------------------------------------
+function genOf(id) {
+  for (var g = 1; g <= 9; g++) {
+    var r = GEN_INFO[g].range;
+    if (id >= r[0] && id <= r[1]) return g;
+  }
+  return 9;
+}
+// POKEMON: [{id, name, gen}]
+const POKEMON = NAMES.map(function (name, i) {
+  var id = i + 1;
+  return { id: id, name: name, gen: genOf(id) };
+});
+const BY_GEN = {};
+for (var g = 1; g <= 9; g++) BY_GEN[g] = POKEMON.filter(function (p) { return p.gen === g; });
+
+// Alternate-form display names map back to their base species for card lookups.
+// e.g. "Mega Charizard", "Galarian Articuno", "Black Kyurem" -> base species card.
+var FORM_PREFIXES = ["Mega ", "Primal ", "Galarian ", "Hisuian ", "Alolan ", "Paldean ",
+  "Bloodmoon ", "Gigantamax ", "Black ", "White ", "Origin ", "Dawn Wings ", "Dusk Mane "];
+function baseSpeciesName(name) {
+  for (var i = 0; i < FORM_PREFIXES.length; i++) {
+    if (name.indexOf(FORM_PREFIXES[i]) === 0) return name.slice(FORM_PREFIXES[i].length);
+  }
+  return name;
+}
+function rarityOf(name, set) {
+  if (!SET_DATA[set]) return null;
+  if (SET_DATA[set][name] != null) return SET_DATA[set][name];
+  // fall back to the base-species card for regional/mega/form names
+  var base = baseSpeciesName(name);
+  return (base !== name && SET_DATA[set][base] != null) ? SET_DATA[set][base] : null;
+}
+function isHolo(rarity) { return rarity === "Holo Rare"; }
+function rarityClass(rarity) {
+  if (!rarity) return "";
+  if (rarity === "Holo Rare") return "holo";
+  return "r-" + rarity.toLowerCase().split(" ")[0];
+}
+
+// ---------------------------------------------------------------------------
+//  STATE + PERSISTENCE
+// ---------------------------------------------------------------------------
+const STORAGE_KEY = "pokedex-collector-v1";
+const DEFAULT_STATE = {
+  mode: "pokedex",       // "pokedex" | "set"
+  gen: 1,                // current generation in view
+  chosenSet: {},         // gen -> chosen set name
+  filter: "all",         // all | missing | ideal | backup
+  search: "",
+  // collection["<set>|<id>"] = { status: "ideal"|"backup", cond: "NM"|"LP" }
+  collection: {}
+};
+
+let state = loadState();
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      return Object.assign({}, DEFAULT_STATE, parsed,
+        { chosenSet: Object.assign({}, parsed.chosenSet), collection: Object.assign({}, parsed.collection) });
+    }
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+// Ensure each generation has a default chosen set
+for (var gg = 1; gg <= 9; gg++) {
+  if (!state.chosenSet[gg]) state.chosenSet[gg] = GEN_SETS[gg][0];
+}
+
+const $ = function (id) { return document.getElementById(id); };
+function colKey(set, id) { return set + "|" + id; }
+function getEntry(set, id) { return state.collection[colKey(set, id)] || null; }
+function currentSet() { return state.chosenSet[state.gen]; }
+
+// ---------------------------------------------------------------------------
+//  STATS + PROGRESS  (computed over each generation's CHOSEN set)
+// ---------------------------------------------------------------------------
+function genStats(gen) {
+  var set = state.chosenSet[gen];
+  var obtainable = 0, collected = 0, ideal = 0, backup = 0;
+  BY_GEN[gen].forEach(function (p) {
+    if (rarityOf(p.name, set)) {
+      obtainable++;
+      var e = getEntry(set, p.id);
+      if (e) { collected++; if (e.status === "ideal") ideal++; else if (e.status === "backup") backup++; }
+    }
+  });
+  return { set: set, obtainable: obtainable, collected: collected, ideal: ideal, backup: backup };
+}
+function overallStats() {
+  var o = { obtainable: 0, collected: 0, ideal: 0, backup: 0 };
+  for (var g = 1; g <= 9; g++) {
+    var s = genStats(g);
+    o.obtainable += s.obtainable; o.collected += s.collected; o.ideal += s.ideal; o.backup += s.backup;
+  }
+  return o;
+}
+// ---------------------------------------------------------------------------
+//  RENDERING
+// ---------------------------------------------------------------------------
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function (m) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
+  });
+}
+
+function renderStatsAndProgress() {
+  var o = overallStats();
+  $("statTotal").textContent = o.collected;
+  $("statIdeal").textContent = o.ideal;
+  $("statBackup").textContent = o.backup;
+  var pct = o.obtainable ? Math.round((o.collected / o.obtainable) * 100) : 0;
+  $("statPct").textContent = pct + "%";
+  $("overallFrac").textContent = o.collected + " / " + o.obtainable;
+  $("overallBar").style.width = pct + "%";
+
+  var html = "";
+  for (var g = 1; g <= 9; g++) {
+    var s = genStats(g);
+    var gp = s.obtainable ? Math.round((s.collected / s.obtainable) * 100) : 0;
+    var active = (state.mode === "pokedex" && state.gen === g) ? " active" : "";
+    html += '<div class="gen-prog' + active + '" data-gen="' + g + '">' +
+              '<div class="row1"><span class="name">' + GEN_INFO[g].name + ' Â· ' + GEN_INFO[g].region + '</span>' +
+              '<span class="frac">' + s.collected + '/' + s.obtainable + '</span></div>' +
+              '<div class="bar"><div style="width:' + gp + '%"></div></div>' +
+              '<div class="setname">' + escapeHtml(s.set) + '</div>' +
+            '</div>';
+  }
+  $("genGrid").innerHTML = html;
+  Array.prototype.forEach.call(document.querySelectorAll(".gen-prog"), function (el) {
+    el.addEventListener("click", function () {
+      state.mode = "pokedex"; state.gen = parseInt(el.getAttribute("data-gen"), 10);
+      syncModeButtons(); save(); renderAll();
+    });
+  });
+}
+
+// A set is "populated" if any PokÃ©mon rarity data has been entered for it.
+function setHasData(set) { return !!(SET_DATA[set] && Object.keys(SET_DATA[set]).length); }
+
+function buildSelectors() {
+  // Generation selector (only meaningful in PokÃ©dex mode, but always shown)
+  var gs = $("genSelect"); gs.innerHTML = "";
+  for (var g = 1; g <= 9; g++) {
+    var opt = document.createElement("option");
+    opt.value = g; opt.textContent = GEN_INFO[g].name + " â " + GEN_INFO[g].region +
+      " (#" + GEN_INFO[g].range[0] + "â" + GEN_INFO[g].range[1] + ")";
+    gs.appendChild(opt);
+  }
+  gs.value = state.gen;
+
+  // Set selector â sets for the chosen generation; empty ones are flagged.
+  var ss = $("setSelect"); ss.innerHTML = "";
+  GEN_SETS[state.gen].forEach(function (setName) {
+    var opt = document.createElement("option");
+    opt.value = setName;
+    opt.textContent = setHasData(setName) ? setName : setName + " â no data yet";
+    ss.appendChild(opt);
+  });
+  ss.value = currentSet();
+}
+
+function pokeCardHTML(p) {
+  var set = currentSet();
+  var rarity = rarityOf(p.name, set);
+  var dex = "#" + String(p.id).padStart(4, "0");
+  var holo = isHolo(rarity);
+
+  var idealInfo, backupInfo;
+  if (!rarity) {
+    idealInfo = '<span class="notinset-txt">Not in this set.</span>';
+    backupInfo = '<span class="notinset-txt">â</span>';
+  } else if (holo) {
+    idealInfo = '<span class="holo-badge">â Holo Rare</span>';
+    backupInfo = '<span class="rarity r-rare">Non-Holo (Rare)</span>';
+  } else {
+    idealInfo = '<span class="rarity ' + rarityClass(rarity) + '">' + rarity + '</span>';
+    backupInfo = '<span class="rarity ' + rarityClass(rarity) + '">' + rarity + ' (same)</span>';
+  }
+
+  var entry = getEntry(set, p.id);
+  var status = entry ? entry.status : "missing";
+  var cond = entry ? entry.cond : "NM";
+
+  var statusLabel = status === "ideal" ? "Ideal Collected"
+                  : status === "backup" ? "Backup Collected" : "Missing";
+  var notInSet = rarity ? "" : " notinset";
+  var condRow = "";
+  if (entry) {
+    condRow =
+      '<div class="cond-row">Condition:' +
+        '<button class="cbtn ' + (cond === "NM" ? "active" : "") + '" data-cond="NM">NM</button>' +
+        '<button class="cbtn ' + (cond === "LP" ? "active" : "") + '" data-cond="LP">LP</button>' +
+      '</div>';
+  }
+
+  var disableIdeal = "";  // ideal allowed even if no holo (best available card)
+  return '' +
+    '<div class="pcard s-' + status + notInSet + '" data-id="' + p.id + '">' +
+      '<div class="top">' +
+        '<span class="dex">' + dex + '</span>' +
+        '<span class="pname">' + escapeHtml(p.name) + '</span>' +
+        '<span class="gentag">' + GEN_INFO[p.gen].name + '</span>' +
+      '</div>' +
+      '<div class="cardinfo">' +
+        '<div class="line"><span class="tag">Ideal</span>' + idealInfo + '</div>' +
+        '<div class="line"><span class="tag">Backup</span>' + backupInfo + '</div>' +
+      '</div>' +
+      '<div class="statusline"><span class="dot ' + status + '"></span>' + statusLabel +
+        (entry ? ' <span class="cond-pill">' + cond + '</span>' : '') + '</div>' +
+      (rarity ?
+        '<div class="actions">' +
+          '<button class="' + (status === "ideal" ? "on-ideal" : "") + '" data-set="ideal"' + disableIdeal + '>â Ideal</button>' +
+          '<button class="' + (status === "backup" ? "on-backup" : "") + '" data-set="backup">ð Backup</button>' +
+          '<button data-set="missing" title="Clear / mark missing">â¬ Missing</button>' +
+        '</div>' + condRow +
+        '<button class="view-card" data-view="1">ð´ View Card</button>'
+      : '') +
+    '</div>';
+}
+
+function visiblePokemon() {
+  var set = currentSet();
+  var list = state.mode === "pokedex" ? BY_GEN[state.gen] : BY_GEN[state.gen];
+  // Set mode: only PokÃ©mon present in the set
+  if (state.mode === "set") list = list.filter(function (p) { return !!rarityOf(p.name, set); });
+  // Search
+  var q = state.search.trim().toLowerCase();
+  if (q) list = list.filter(function (p) { return p.name.toLowerCase().indexOf(q) !== -1; });
+  // Filter by status
+  if (state.filter !== "all") {
+    list = list.filter(function (p) {
+      var e = getEntry(set, p.id);
+      var st = e ? e.status : "missing";
+      return st === state.filter;
+    });
+  }
+  return list;
+}
+
+function renderGrid() {
+  var grid = $("grid");
+  // Empty set: show a clear placeholder instead of a wall of "Not in this set" cards.
+  if (!setHasData(currentSet())) {
+    grid.innerHTML = '<div class="empty">ð­ No card data yet for <b>' + escapeHtml(currentSet()) +
+      '</b>. Cards will show as âNot in this setâ. Data coming soon!</div>';
+    return;
+  }
+  var list = visiblePokemon();
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty">No PokÃ©mon match your filters in <b>' +
+      escapeHtml(currentSet()) + '</b>.</div>';
+    return;
+  }
+  grid.innerHTML = list.map(pokeCardHTML).join("");
+  // Wire actions
+  Array.prototype.forEach.call(grid.querySelectorAll(".pcard"), function (card) {
+    var id = parseInt(card.getAttribute("data-id"), 10);
+    Array.prototype.forEach.call(card.querySelectorAll("[data-set]"), function (btn) {
+      btn.addEventListener("click", function () { setStatus(id, btn.getAttribute("data-set")); });
+    });
+    Array.prototype.forEach.call(card.querySelectorAll("[data-cond]"), function (btn) {
+      btn.addEventListener("click", function () { setCondition(id, btn.getAttribute("data-cond")); });
+    });
+    var vc = card.querySelector("[data-view]");
+    if (vc) vc.addEventListener("click", function () { openLightbox(currentSet(), POKEMON[id - 1]); });
+  });
+}
+
+function setStatus(id, status) {
+  var set = currentSet();
+  var key = colKey(set, id);
+  if (status === "missing") {
+    delete state.collection[key];
+  } else {
+    var existing = state.collection[key];
+    state.collection[key] = { status: status, cond: existing ? existing.cond : "NM" };
+  }
+  save(); renderAll();
+}
+function setCondition(id, cond) {
+  var set = currentSet();
+  var key = colKey(set, id);
+  if (state.collection[key]) { state.collection[key].cond = cond; save(); renderGrid(); }
+}
+
+function syncModeButtons() {
+  $("modePokedex").classList.toggle("active", state.mode === "pokedex");
+  $("modeSet").classList.toggle("active", state.mode === "set");
+  $("genField").style.display = "";
+}
+
+function renderAll() {
+  buildSelectors();
+  renderStatsAndProgress();
+  renderGrid();
+  renderQuickResults();
+}
+
+// Generic mark helpers keyed by an explicit set (used by quick-search across gens)
+function markCardSet(set, id, status) {
+  var key = colKey(set, id);
+  if (status === "missing") { delete state.collection[key]; }
+  else {
+    var existing = state.collection[key];
+    state.collection[key] = { status: status, cond: existing ? existing.cond : "NM" };
+  }
+  save(); renderAll();
+}
+function condCardSet(set, id, cond) {
+  var key = colKey(set, id);
+  if (state.collection[key]) { state.collection[key].cond = cond; save(); renderAll(); }
+}
+
+// ---------------------------------------------------------------------------
+//  CARD IMAGES (pokemontcg.io) + LIGHTBOX
+// ---------------------------------------------------------------------------
+var IMG_CACHE = {}; // "setId|name" -> resolved small image url (or "" if none)
+
+function directImageUrl(set, id, hires) {
+  var setId = SET_IDS[set];
+  if (!setId) return null;
+  var nums = CARD_NUMBERS[setId];
+  var num = nums && nums[id];
+  if (!num) return null;
+  return "https://images.pokemontcg.io/" + setId + "/" + num + (hires ? "_hires" : "") + ".png";
+}
+
+// Resolve a thumbnail URL; tries the direct URL, else queries the API by name.
+function resolveImage(set, p, cb) {
+  var setId = SET_IDS[set];
+  if (!setId) { cb(null); return; }
+  var direct = directImageUrl(set, p.id, false);
+  if (direct) { cb(direct); return; }
+  var ckey = setId + "|" + p.name;
+  if (IMG_CACHE[ckey] !== undefined) { cb(IMG_CACHE[ckey] || null); return; }
+  var apiName = p.name.replace(/[â]/g, "-f").replace(/[â]/g, "-m");
+  var url = "https://api.pokemontcg.io/v2/cards?q=" +
+    encodeURIComponent('name:"' + apiName + '" set.id:' + setId) + "&select=images,number&pageSize=1";
+  fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+    var img = (j && j.data && j.data[0] && j.data[0].images && j.data[0].images.small) || "";
+    IMG_CACHE[ckey] = img; cb(img || null);
+  }).catch(function () { IMG_CACHE[ckey] = ""; cb(null); });
+}
+
+function openLightbox(set, p) {
+  var lb = $("lightbox");
+  lb.classList.add("show");
+  $("lightboxTitle").textContent = "#" + String(p.id).padStart(4, "0") + " " + p.name + " â " + set;
+  $("lightboxStage").innerHTML = '<div class="lightbox-loading">Loading card imageâ¦</div>';
+  $("lightboxMeta").innerHTML = "";
+  if (!SET_IDS[set]) {
+    $("lightboxStage").innerHTML = '<div class="lightbox-error">No image source mapped for this set.</div>';
+    return;
+  }
+  var hires = directImageUrl(set, p.id, true);
+  if (hires) { showLightboxImg(hires, set); return; }
+  // resolve via API to get whatever printing exists
+  var setId = SET_IDS[set];
+  var apiName = p.name.replace(/[â]/g, "-f").replace(/[â]/g, "-m");
+  var url = "https://api.pokemontcg.io/v2/cards?q=" +
+    encodeURIComponent('name:"' + apiName + '" set.id:' + setId) + "&select=images,number&pageSize=1";
+  fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+    var card = j && j.data && j.data[0];
+    var big = card && card.images && (card.images.large || card.images.small);
+    if (big) showLightboxImg(big, set);
+    else $("lightboxStage").innerHTML = '<div class="lightbox-error">No card image found for ' +
+      escapeHtml(p.name) + ' in this set.</div>';
+  }).catch(function () {
+    $("lightboxStage").innerHTML = '<div class="lightbox-error">Could not reach the card image API (offline?).</div>';
+  });
+}
+function showLightboxImg(src, set) {
+  var img = new Image();
+  img.onload = function () { $("lightboxStage").innerHTML = ""; $("lightboxStage").appendChild(img); };
+  img.onerror = function () { $("lightboxStage").innerHTML = '<div class="lightbox-error">Image unavailable for this exact card.</div>'; };
+  img.src = src;
+  $("lightboxMeta").innerHTML = 'Source: <a href="https://pokemontcg.io" target="_blank" rel="noopener">pokemontcg.io</a> Â· Set: ' + escapeHtml(set);
+}
+function closeLightbox() { $("lightbox").classList.remove("show"); $("lightboxStage").innerHTML = ""; }
+
+// ---------------------------------------------------------------------------
+//  QUICK SEARCH (primary "log a card" flow)
+// ---------------------------------------------------------------------------
+function renderQuickResults() {
+  var box = $("quickResults");
+  var q = (state.quick || "").trim().toLowerCase();
+  if (!q) { box.innerHTML = ""; return; }
+  var matches = POKEMON.filter(function (p) { return p.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 12);
+  if (!matches.length) { box.innerHTML = '<div class="qr-empty">No PokÃ©mon match â' + escapeHtml(q) + 'â.</div>'; return; }
+  box.innerHTML = matches.map(quickResultHTML).join("");
+  Array.prototype.forEach.call(box.querySelectorAll(".qr"), function (row) {
+    var id = parseInt(row.getAttribute("data-id"), 10);
+    var set = row.getAttribute("data-set");
+    var p = POKEMON[id - 1];
+    Array.prototype.forEach.call(row.querySelectorAll("[data-mark]"), function (btn) {
+      btn.addEventListener("click", function () { markCardSet(set, id, btn.getAttribute("data-mark")); });
+    });
+    Array.prototype.forEach.call(row.querySelectorAll("[data-qcond]"), function (btn) {
+      btn.addEventListener("click", function () { condCardSet(set, id, btn.getAttribute("data-qcond")); });
+    });
+    var thumb = row.querySelector(".qr-thumb");
+    if (thumb) thumb.addEventListener("click", function () { openLightbox(set, p); });
+    // lazy-load thumbnail (never let an image/network error break rendering)
+    if (thumb && rarityOf(p.name, set)) {
+      try {
+        resolveImage(set, p, function (src) {
+          if (src) thumb.innerHTML = '<img src="' + src + '" alt="" loading="lazy" />';
+        });
+      } catch (e) { /* ignore image errors */ }
+    }
+  });
+}
+
+// Enter in the quick search selects the first match and logs it as Ideal (NM).
+function quickEnter() {
+  var q = (state.quick || "").trim().toLowerCase();
+  if (!q) return;
+  var first = POKEMON.filter(function (p) { return p.name.toLowerCase().indexOf(q) !== -1; })[0];
+  if (!first) return;
+  var set = state.chosenSet[first.gen];
+  if (!rarityOf(first.name, set)) { return; } // not in its set â nothing to log
+  markCardSet(set, first.id, "ideal");
+}
+
+function quickResultHTML(p) {
+  var set = state.chosenSet[p.gen];
+  var rarity = rarityOf(p.name, set);
+  var entry = getEntry(set, p.id);
+  var status = entry ? entry.status : "missing";
+  var cond = entry ? entry.cond : "NM";
+  var holo = isHolo(rarity);
+  var dex = "#" + String(p.id).padStart(4, "0");
+
+  var rarityInfo = !rarity ? '<span class="qr-notinset">Not in ' + escapeHtml(set) + '</span>'
+    : holo ? '<span class="holo-badge">â Holo Rare</span>'
+    : '<span class="rarity ' + rarityClass(rarity) + '">' + rarity + '</span>';
+
+  var statusLabel = status === "ideal" ? "Ideal Collected" : status === "backup" ? "Backup Collected" : "Missing";
+
+  var actions = "";
+  if (rarity) {
+    actions =
+      '<div class="qr-btns">' +
+        '<button class="' + (status === "ideal" ? "on-ideal" : "") + '" data-mark="ideal">â Ideal</button>' +
+        '<button class="' + (status === "backup" ? "on-backup" : "") + '" data-mark="backup">ð Backup</button>' +
+        '<button class="miss" data-mark="missing" title="Clear">â¬</button>' +
+      '</div>' +
+      (entry ?
+        '<div class="qr-cond">Condition:' +
+          '<button class="cbtn ' + (cond === "NM" ? "active" : "") + '" data-qcond="NM">NM</button>' +
+          '<button class="cbtn ' + (cond === "LP" ? "active" : "") + '" data-qcond="LP">LP</button>' +
+        '</div>' : "");
+  }
+
+  return '' +
+    '<div class="qr s-' + status + '" data-id="' + p.id + '" data-set="' + escapeHtml(set) + '">' +
+      '<div class="qr-thumb" title="View card image">ð´</div>' +
+      '<div class="qr-main">' +
+        '<div class="qr-name"><span class="dex">' + dex + '</span>' + escapeHtml(p.name) + '</div>' +
+        '<div class="qr-sub">' + GEN_INFO[p.gen].name + ' Â· ' + GEN_INFO[p.gen].region +
+          ' Â· <span class="setpill">' + escapeHtml(set) + '</span> Â· ' + rarityInfo + '</div>' +
+        '<div class="qr-status"><span class="dot ' + status + '"></span>' + statusLabel +
+          (entry ? ' Â· ' + cond : '') + '</div>' +
+      '</div>' +
+      '<div class="qr-actions">' + actions + '</div>' +
+    '</div>';
+}
+
+// ---------------------------------------------------------------------------
+//  IMPORT / EXPORT
+// ---------------------------------------------------------------------------
+function exportData() {
+  var payload = {
+    app: "pokedex-collector", version: 1, exported: new Date().toISOString(),
+    chosenSet: state.chosenSet, collection: state.collection
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = "pokedex-collection.json"; a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(file) {
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (data.collection) state.collection = data.collection;
+      if (data.chosenSet) state.chosenSet = Object.assign(state.chosenSet, data.chosenSet);
+      save(); renderAll();
+      alert("Collection imported successfully.");
+    } catch (err) { alert("Could not import: not a valid collection file."); }
+  };
+  reader.readAsText(file);
+}
+
+// ---------------------------------------------------------------------------
+//  EVENT WIRING + INIT
+// ---------------------------------------------------------------------------
+function init() {
+  state.quick = "";
+  syncModeButtons();
+  renderAll();
+
+  $("modePokedex").addEventListener("click", function () { state.mode = "pokedex"; syncModeButtons(); save(); renderAll(); });
+  $("modeSet").addEventListener("click", function () { state.mode = "set"; syncModeButtons(); save(); renderAll(); });
+
+  $("genSelect").addEventListener("change", function () { state.gen = parseInt(this.value, 10); save(); renderAll(); });
+  $("setSelect").addEventListener("change", function () { state.chosenSet[state.gen] = this.value; save(); renderAll(); });
+
+  $("search").addEventListener("input", function () { state.search = this.value; renderGrid(); });
+
+  // Quick "log a card" search (does not persist the query)
+  $("quickSearch").addEventListener("input", function () { state.quick = this.value; renderQuickResults(); });
+  $("quickSearch").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); quickEnter(); }
+  });
+  $("quickClear").addEventListener("click", function () {
+    state.quick = ""; $("quickSearch").value = ""; renderQuickResults(); $("quickSearch").focus();
+  });
+
+  // Lightbox close interactions
+  $("lightboxClose").addEventListener("click", closeLightbox);
+  $("lightbox").addEventListener("click", function (e) { if (e.target === $("lightbox")) closeLightbox(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeLightbox(); });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".filters button"), function (btn) {
+    btn.addEventListener("click", function () {
+      state.filter = btn.getAttribute("data-filter");
+      Array.prototype.forEach.call(document.querySelectorAll(".filters button"), function (b) {
+        b.classList.toggle("active", b === btn);
+      });
+      save(); renderGrid();
+    });
+  });
+
+  $("exportBtn").addEventListener("click", exportData);
+  $("importBtn").addEventListener("click", function () { $("fileInput").click(); });
+  $("fileInput").addEventListener("change", function (e) {
+    if (e.target.files[0]) importData(e.target.files[0]);
+    e.target.value = "";
+  });
+  $("resetBtn").addEventListener("click", function () {
+    if (confirm("Reset ALL collection progress? This cannot be undone.")) {
+      state.collection = {}; save(); renderAll();
+    }
+  });
+
+  // Restore filter button active state
+  Array.prototype.forEach.call(document.querySelectorAll(".filters button"), function (b) {
+    b.classList.toggle("active", b.getAttribute("data-filter") === state.filter);
+  });
+  $("search").value = state.search;
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
