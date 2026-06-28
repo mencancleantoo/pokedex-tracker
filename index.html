@@ -931,7 +931,7 @@ function buildSelectors() {
   var gs = $("genSelect"); gs.innerHTML = "";
   for (var g = 1; g <= 9; g++) {
     var opt = document.createElement("option");
-    opt.value = g; opt.textContent = GEN_INFO[g].name + " &mdash; " + GEN_INFO[g].region +
+    opt.value = g; opt.textContent = GEN_INFO[g].name + " — " + GEN_INFO[g].region +
       " (#" + GEN_INFO[g].range[0] + "–" + GEN_INFO[g].range[1] + ")";
     gs.appendChild(opt);
   }
