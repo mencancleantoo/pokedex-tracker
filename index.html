@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PokÃ©dex Collector â Generation-Authentic TCG Tracker</title>
+<title>Pok&eacute;dex Collector &mdash; Generation-Authentic TCG Tracker</title>
 <style>
   :root {
     --bg: #0a0e23;
@@ -128,7 +128,7 @@
   .btn:hover { background: #283163; }
   .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: #1a1300; border: none; }
 
-  /* ---------- PokÃ©mon grid ---------- */
+  /* ---------- Pok&eacute;mon grid ---------- */
   .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); }
   .pcard {
     background: linear-gradient(180deg, var(--panel-2), var(--panel));
@@ -141,7 +141,8 @@
   .pcard.s-backup { border-left-color: var(--orange); }
   .pcard.s-missing { border-left-color: var(--gray); }
   .pcard.notinset { opacity: .55; }
-  .pcard .top { display: flex; align-items: baseline; gap: 8px; }
+  .pcard .top { display: flex; align-items: center; gap: 8px; }
+  .pcard-img { width: 48px; height: 66px; object-fit: cover; border-radius: 4px; flex-shrink: 0; border: 1px solid var(--border); }
   .pcard .dex { font-size: 13px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
   .pcard .pname { font-size: 18px; font-weight: 800; }
   .pcard .gentag { margin-left: auto; font-size: 10px; color: var(--muted); border: 1px solid var(--border); padding: 2px 7px; border-radius: 999px; }
@@ -241,7 +242,7 @@
   .qr-empty { color: var(--muted); font-size: 13px; padding: 6px 2px; }
   .qr-notinset { color: var(--gray); font-style: italic; font-size: 12px; }
 
-  /* card thumb button on main pokÃ©mon cards */
+  /* card thumb button on main pok&eacute;mon cards */
   .view-card {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
     background: var(--bg-2); border: 1px solid var(--border); color: var(--muted);
@@ -271,10 +272,10 @@
 <body>
 <header>
   <div class="header-inner">
-    <div class="logo"><span class="pokeball"></span> PokÃ©<span class="gold">dex</span> Collector</div>
+    <div class="logo"><span class="pokeball"></span> Pok&eacute;<span class="gold">dex</span> Collector</div>
     <div class="spacer"></div>
     <div class="mode-switch">
-      <button id="modePokedex" class="active">PokÃ©dex Mode</button>
+      <button id="modePokedex" class="active">Pok&eacute;dex Mode</button>
       <button id="modeSet">Set Mode</button>
     </div>
   </div>
@@ -283,21 +284,21 @@
 <main>
   <!-- Quick "mark as collected" hero search -->
   <div class="hero">
-    <div class="hero-title">â¡ Log a Card</div>
-    <div class="hero-sub">Find a PokÃ©mon, see the card, mark it collected.</div>
+    <div class="hero-title">⚡ Log a Card</div>
+    <div class="hero-sub">Find a Pok&eacute;mon, see the card, mark it collected.</div>
     <div class="hero-search">
-      <input type="text" id="quickSearch" placeholder="Type a PokÃ©mon nameâ¦ e.g. Charizard" autocomplete="off" />
-      <button class="btn" id="quickClear" title="Clear">â</button>
+      <input type="text" id="quickSearch" placeholder="Type a Pok&eacute;mon name&hellip; e.g. Charizard" autocomplete="off" />
+      <button class="btn" id="quickClear" title="Clear">✕</button>
     </div>
     <div class="quick-results" id="quickResults"></div>
   </div>
 
   <!-- Stats dashboard -->
   <div class="stats-row">
-    <div class="stat-card total"><div class="ico">ð</div><div class="num" id="statTotal">0</div><div class="lbl">Total Collected</div></div>
-    <div class="stat-card ideal"><div class="ico">â</div><div class="num" id="statIdeal">0</div><div class="lbl">Ideal (Holo)</div></div>
-    <div class="stat-card backup"><div class="ico">ð</div><div class="num" id="statBackup">0</div><div class="lbl">Backup</div></div>
-    <div class="stat-card pct"><div class="ico">ð</div><div class="num" id="statPct">0%</div><div class="lbl">Overall Complete</div></div>
+    <div class="stat-card total"><div class="ico">📚</div><div class="num" id="statTotal">0</div><div class="lbl">Total Collected</div></div>
+    <div class="stat-card ideal"><div class="ico">&#9989;</div><div class="num" id="statIdeal">0</div><div class="lbl">Ideal (Holo)</div></div>
+    <div class="stat-card backup"><div class="ico">&#8635;</div><div class="num" id="statBackup">0</div><div class="lbl">Backup</div></div>
+    <div class="stat-card pct"><div class="ico">📈</div><div class="num" id="statPct">0%</div><div class="lbl">Overall Complete</div></div>
   </div>
 
   <!-- Progress panel -->
@@ -322,7 +323,7 @@
     </div>
     <div class="field search">
       <label for="search">Search</label>
-      <input type="text" id="search" placeholder="Search by PokÃ©mon nameâ¦" autocomplete="off" />
+      <input type="text" id="search" placeholder="Search by Pok&eacute;mon name&hellip;" autocomplete="off" />
     </div>
     <div class="field">
       <label>Filter</label>
@@ -334,21 +335,21 @@
       </div>
     </div>
     <div class="tool-right">
-      <button class="btn btn-gold" id="exportBtn">â¬ Export</button>
-      <button class="btn" id="importBtn">â¬ Import</button>
+      <button class="btn btn-gold" id="exportBtn">⬇ Export</button>
+      <button class="btn" id="importBtn">⬆ Import</button>
       <button class="btn" id="resetBtn">Reset</button>
     </div>
   </div>
 
   <div class="grid" id="grid"></div>
 
-  <p class="footer-note">Saved automatically in your browser (localStorage). English cards only Â· Conditions: NM / LP.</p>
+  <p class="footer-note">Saved automatically in your browser (localStorage). English cards only &middot; Conditions: NM / LP.</p>
 </main>
 
 <!-- Card image lightbox -->
 <div class="lightbox" id="lightbox">
   <div class="lightbox-inner">
-    <button class="lightbox-close" id="lightboxClose" title="Close">â</button>
+    <button class="lightbox-close" id="lightboxClose" title="Close">✕</button>
     <div class="lightbox-title" id="lightboxTitle"></div>
     <div class="lightbox-stage" id="lightboxStage"></div>
     <div class="lightbox-meta" id="lightboxMeta"></div>
@@ -392,7 +393,7 @@ const GEN_SETS = {
       "Unbroken Bonds", "Unified Minds", "Hidden Fates", "Cosmic Eclipse"],
   8: ["Sword & Shield Base Set", "Rebel Clash", "Darkness Ablaze", "Champion's Path", "Vivid Voltage",
       "Battle Styles", "Chilling Reign", "Evolving Skies", "Celebrations", "Fusion Strike", "Brilliant Stars",
-      "Astral Radiance", "PokÃ©mon GO", "Lost Origin", "Silver Tempest", "Crown Zenith"],
+      "Astral Radiance", "Pok&eacute;mon GO", "Lost Origin", "Silver Tempest", "Crown Zenith"],
   9: ["Scarlet & Violet Base Set", "Paldea Evolved", "Obsidian Flames", "Paradox Rift", "Paldean Fates",
       "Temporal Forces", "Twilight Masquerade", "Shrouded Fable", "Stellar Crown", "Surging Sparks"]
 };
@@ -403,8 +404,8 @@ const NAMES = [];
 NAMES.push(
   "Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise",
   "Caterpie","Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot","Rattata",
-  "Raticate","Spearow","Fearow","Ekans","Arbok","Pikachu","Raichu","Sandshrew","Sandslash","Nidoranâ",
-  "Nidorina","Nidoqueen","Nidoranâ","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales",
+  "Raticate","Spearow","Fearow","Ekans","Arbok","Pikachu","Raichu","Sandshrew","Sandslash","Nidoran♀",
+  "Nidorina","Nidoqueen","Nidoran♂","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales",
   "Jigglypuff","Wigglytuff","Zubat","Golbat","Oddish","Gloom","Vileplume","Paras","Parasect","Venonat",
   "Venomoth","Diglett","Dugtrio","Meowth","Persian","Psyduck","Golduck","Mankey","Primeape","Growlithe",
   "Arcanine","Poliwag","Poliwhirl","Poliwrath","Abra","Kadabra","Alakazam","Machop","Machoke","Machamp",
@@ -484,7 +485,7 @@ NAMES.push(
 NAMES.push(
   "Chespin","Quilladin","Chesnaught","Fennekin","Braixen","Delphox","Froakie","Frogadier","Greninja","Bunnelby",
   "Diggersby","Fletchling","Fletchinder","Talonflame","Scatterbug","Spewpa","Vivillon","Litleo","Pyroar",
-  "FlabÃ©bÃ©","Floette","Florges","Skiddo","Gogoat","Pancham","Pangoro","Furfrou","Espurr","Meowstic","Honedge",
+  "Flab&eacute;b&eacute;","Floette","Florges","Skiddo","Gogoat","Pancham","Pangoro","Furfrou","Espurr","Meowstic","Honedge",
   "Doublade","Aegislash","Spritzee","Aromatisse","Swirlix","Slurpuff","Inkay","Malamar","Binacle","Barbaracle",
   "Skrelp","Dragalge","Clauncher","Clawitzer","Helioptile","Heliolisk","Tyrunt","Tyrantrum","Amaura","Aurorus",
   "Sylveon","Hawlucha","Dedenne","Carbink","Goomy","Sliggoo","Goodra","Klefki","Phantump","Trevenant",
@@ -562,7 +563,7 @@ const SET_IDS = {
   "Sword & Shield Base Set": "swsh1", "Rebel Clash": "swsh2", "Darkness Ablaze": "swsh3",
   "Champion's Path": "swsh35", "Vivid Voltage": "swsh4", "Battle Styles": "swsh5", "Chilling Reign": "swsh6",
   "Evolving Skies": "swsh7", "Celebrations": "cel25", "Fusion Strike": "swsh8", "Brilliant Stars": "swsh9",
-  "Astral Radiance": "swsh10", "PokÃ©mon GO": "pgo", "Lost Origin": "swsh11", "Silver Tempest": "swsh12",
+  "Astral Radiance": "swsh10", "Pok&eacute;mon GO": "pgo", "Lost Origin": "swsh11", "Silver Tempest": "swsh12",
   "Crown Zenith": "swsh12pt5",
   "Scarlet & Violet Base Set": "sv1", "Paldea Evolved": "sv2", "Obsidian Flames": "sv3",
   "Paradox Rift": "sv4", "Paldean Fates": "sv4pt5", "Temporal Forces": "sv5", "Twilight Masquerade": "sv6",
@@ -573,7 +574,7 @@ const SET_IDS = {
 // Used to build a direct image URL; otherwise we fall back to the API name search.
 const CARD_NUMBERS = {};
 function setNums(setId, map) { CARD_NUMBERS[setId] = map; }
-// Base Set (base1) â real numbering. dexId -> card number in set.
+// Base Set (base1) &mdash; real numbering. dexId -> card number in set.
 setNums("base1", {
   // Holos #1-16 (alphabetical by card name)
   65:1, 9:2, 113:3, 6:4, 35:5, 130:6, 107:7, 68:8, 82:9, 150:10, 34:11, 38:12, 62:13, 26:14, 3:15, 145:16,
@@ -581,11 +582,11 @@ setNums("base1", {
   15:17, 148:18, 51:19, 125:20, 101:21, 17:22, 59:23, 5:24, 87:25, 147:26, 83:27, 58:28, 93:29, 2:30, 124:31, 64:32,
   // Uncommons #33-42
   14:33, 67:34, 129:35, 126:36, 33:37, 61:38, 137:39, 20:40, 86:41, 8:42,
-  // Commons #43-69 (PokÃ©mon): Metapod=54, Starmie=64
+  // Commons #43-69 (Pok&eacute;mon): Metapod=54, Starmie=64
   63:43, 1:44, 10:45, 4:46, 50:47, 84:48, 96:49, 92:50, 109:51, 66:52, 81:53, 11:54, 32:55,
   95:56, 16:57, 25:58, 60:59, 77:60, 19:61, 27:62, 7:63, 121:64, 120:65, 114:66, 100:67, 37:68, 13:69
 });
-// Jungle (base2) â real numbering. dexId -> card number in set.
+// Jungle (base2) &mdash; real numbering. dexId -> card number in set.
 setNums("base2", {
   // Holos #1-16 (alphabetical by card name)
   36:1, 101:2, 136:3, 135:4, 115:5, 122:6, 31:7, 18:8, 127:9, 123:10, 143:11, 134:12, 49:13, 71:14, 45:15, 40:16,
@@ -594,7 +595,7 @@ setNums("base2", {
   // Commons #49-64
   69:49, 104:50, 133:51, 102:52, 118:53, 39:54, 56:55, 52:56, 29:57, 43:58, 46:59, 25:60, 111:61, 21:62, 48:63, 37:64
 });
-// Fossil (base3) â real numbering. dexId -> card number in set.
+// Fossil (base3) &mdash; real numbering. dexId -> card number in set.
 setNums("base3", {
   // Holos #1-15 (alphabetical by card name)
   142:1, 144:2, 132:3, 149:4, 94:5, 93:6, 106:7, 97:8, 141:9, 131:10, 82:11, 146:12, 89:13, 26:14, 145:15,
@@ -617,9 +618,9 @@ function addSet(set, holos, rares, uncommons, commons) {
   (holos     || []).forEach(function (n) { m[n] = "Holo Rare"; }); // holo always wins
 }
 
-/* ===== Gen I â Base Set (authentic 1999 checklist) ===== */
+/* ===== Gen I &mdash; Base Set (authentic 1999 checklist) ===== */
 addSet("Base Set",
-  // Holo Rares â the only 16 holos in Base Set (cards #1-16)
+  // Holo Rares &mdash; the only 16 holos in Base Set (cards #1-16)
   ["Alakazam","Blastoise","Chansey","Charizard","Clefairy","Gyarados","Hitmonchan","Machamp","Magneton",
    "Mewtwo","Nidoking","Ninetales","Poliwrath","Raichu","Venusaur","Zapdos"],
   // non-holo Rares (#17-22)
@@ -629,12 +630,12 @@ addSet("Base Set",
    "Kakuna","Machoke","Magikarp","Magmar","Nidorino","Poliwhirl","Porygon","Raticate","Seel","Wartortle"],
   // Commons (#43-69)
   ["Abra","Bulbasaur","Caterpie","Charmander","Diglett","Doduo","Drowzee","Gastly","Koffing","Machop",
-   "Magnemite","Metapod","Nidoranâ","Onix","Pidgey","Pikachu","Poliwag","Ponyta","Rattata","Sandshrew",
+   "Magnemite","Metapod","Nidoran♂","Onix","Pidgey","Pikachu","Poliwag","Ponyta","Rattata","Sandshrew",
    "Squirtle","Starmie","Staryu","Tangela","Voltorb","Vulpix","Weedle"]
 );
-/* ===== Gen I â Jungle (authentic checklist) ===== */
+/* ===== Gen I &mdash; Jungle (authentic checklist) ===== */
 addSet("Jungle",
-  // Holo Rares â 16 holos (#1-16)
+  // Holo Rares &mdash; 16 holos (#1-16)
   ["Clefable","Electrode","Flareon","Jolteon","Kangaskhan","Mr. Mime","Nidoqueen","Pidgeot","Pinsir","Scyther",
    "Snorlax","Vaporeon","Venomoth","Victreebel","Vileplume","Wigglytuff"],
   [],
@@ -642,13 +643,13 @@ addSet("Jungle",
   ["Butterfree","Dodrio","Exeggutor","Fearow","Gloom","Lickitung","Marowak","Nidorina","Parasect","Persian",
    "Primeape","Rapidash","Rhydon","Seaking","Tauros","Weepinbell"],
   // Commons (16)
-  ["Bellsprout","Cubone","Eevee","Exeggcute","Goldeen","Jigglypuff","Mankey","Meowth","Nidoranâ","Oddish",
+  ["Bellsprout","Cubone","Eevee","Exeggcute","Goldeen","Jigglypuff","Mankey","Meowth","Nidoran♀","Oddish",
    "Paras","Pikachu","Rhyhorn","Spearow","Venonat","Vulpix"]
 );
 
-/* ===== Gen I â Fossil (authentic checklist) ===== */
+/* ===== Gen I &mdash; Fossil (authentic checklist) ===== */
 addSet("Fossil",
-  // Holo Rares â 15 holos (#1-15). Raichu is a Fossil holo; Rhydon is NOT in Fossil;
+  // Holo Rares &mdash; 15 holos (#1-15). Raichu is a Fossil holo; Rhydon is NOT in Fossil;
   // Slowbro is an uncommon, not a holo.
   ["Aerodactyl","Articuno","Ditto","Dragonite","Gengar","Haunter","Hitmonlee","Hypno","Kabutops","Lapras",
    "Magneton","Moltres","Muk","Raichu","Zapdos"],
@@ -907,7 +908,7 @@ function renderStatsAndProgress() {
     var gp = s.obtainable ? Math.round((s.collected / s.obtainable) * 100) : 0;
     var active = (state.mode === "pokedex" && state.gen === g) ? " active" : "";
     html += '<div class="gen-prog' + active + '" data-gen="' + g + '">' +
-              '<div class="row1"><span class="name">' + GEN_INFO[g].name + ' Â· ' + GEN_INFO[g].region + '</span>' +
+              '<div class="row1"><span class="name">' + GEN_INFO[g].name + ' &middot; ' + GEN_INFO[g].region + '</span>' +
               '<span class="frac">' + s.collected + '/' + s.obtainable + '</span></div>' +
               '<div class="bar"><div style="width:' + gp + '%"></div></div>' +
               '<div class="setname">' + escapeHtml(s.set) + '</div>' +
@@ -922,26 +923,26 @@ function renderStatsAndProgress() {
   });
 }
 
-// A set is "populated" if any PokÃ©mon rarity data has been entered for it.
+// A set is "populated" if any Pok&eacute;mon rarity data has been entered for it.
 function setHasData(set) { return !!(SET_DATA[set] && Object.keys(SET_DATA[set]).length); }
 
 function buildSelectors() {
-  // Generation selector (only meaningful in PokÃ©dex mode, but always shown)
+  // Generation selector (only meaningful in Pok&eacute;dex mode, but always shown)
   var gs = $("genSelect"); gs.innerHTML = "";
   for (var g = 1; g <= 9; g++) {
     var opt = document.createElement("option");
-    opt.value = g; opt.textContent = GEN_INFO[g].name + " â " + GEN_INFO[g].region +
-      " (#" + GEN_INFO[g].range[0] + "â" + GEN_INFO[g].range[1] + ")";
+    opt.value = g; opt.textContent = GEN_INFO[g].name + " &mdash; " + GEN_INFO[g].region +
+      " (#" + GEN_INFO[g].range[0] + "–" + GEN_INFO[g].range[1] + ")";
     gs.appendChild(opt);
   }
   gs.value = state.gen;
 
-  // Set selector â sets for the chosen generation; empty ones are flagged.
+  // Set selector &mdash; sets for the chosen generation; empty ones are flagged.
   var ss = $("setSelect"); ss.innerHTML = "";
   GEN_SETS[state.gen].forEach(function (setName) {
     var opt = document.createElement("option");
     opt.value = setName;
-    opt.textContent = setHasData(setName) ? setName : setName + " â no data yet";
+    opt.textContent = setHasData(setName) ? setName : setName + " &mdash; no data yet";
     ss.appendChild(opt);
   });
   ss.value = currentSet();
@@ -956,9 +957,9 @@ function pokeCardHTML(p) {
   var idealInfo, backupInfo;
   if (!rarity) {
     idealInfo = '<span class="notinset-txt">Not in this set.</span>';
-    backupInfo = '<span class="notinset-txt">â</span>';
+    backupInfo = '<span class="notinset-txt">&mdash;</span>';
   } else if (holo) {
-    idealInfo = '<span class="holo-badge">â Holo Rare</span>';
+    idealInfo = '<span class="holo-badge">★ Holo Rare</span>';
     backupInfo = '<span class="rarity r-rare">Non-Holo (Rare)</span>';
   } else {
     idealInfo = '<span class="rarity ' + rarityClass(rarity) + '">' + rarity + '</span>';
@@ -997,11 +998,11 @@ function pokeCardHTML(p) {
         (entry ? ' <span class="cond-pill">' + cond + '</span>' : '') + '</div>' +
       (rarity ?
         '<div class="actions">' +
-          '<button class="' + (status === "ideal" ? "on-ideal" : "") + '" data-set="ideal"' + disableIdeal + '>â Ideal</button>' +
-          '<button class="' + (status === "backup" ? "on-backup" : "") + '" data-set="backup">ð Backup</button>' +
-          '<button data-set="missing" title="Clear / mark missing">â¬ Missing</button>' +
+          '<button class="' + (status === "ideal" ? "on-ideal" : "") + '" data-set="ideal"' + disableIdeal + '>&#9989; Ideal</button>' +
+          '<button class="' + (status === "backup" ? "on-backup" : "") + '" data-set="backup">&#8635; Backup</button>' +
+          '<button data-set="missing" title="Clear / mark missing">&#9744; Clear</button>' +
         '</div>' + condRow +
-        '<button class="view-card" data-view="1">ð´ View Card</button>'
+        '<button class="view-card" data-view="1">&#127540; View Card</button>'
       : '') +
     '</div>';
 }
@@ -1009,7 +1010,7 @@ function pokeCardHTML(p) {
 function visiblePokemon() {
   var set = currentSet();
   var list = state.mode === "pokedex" ? BY_GEN[state.gen] : BY_GEN[state.gen];
-  // Set mode: only PokÃ©mon present in the set
+  // Set mode: only Pok&eacute;mon present in the set
   if (state.mode === "set") list = list.filter(function (p) { return !!rarityOf(p.name, set); });
   // Search
   var q = state.search.trim().toLowerCase();
@@ -1029,13 +1030,13 @@ function renderGrid() {
   var grid = $("grid");
   // Empty set: show a clear placeholder instead of a wall of "Not in this set" cards.
   if (!setHasData(currentSet())) {
-    grid.innerHTML = '<div class="empty">ð­ No card data yet for <b>' + escapeHtml(currentSet()) +
-      '</b>. Cards will show as âNot in this setâ. Data coming soon!</div>';
+    grid.innerHTML = '<div class="empty">📭 No card data yet for <b>' + escapeHtml(currentSet()) +
+      '</b>. Cards will show as “Not in this set”. Data coming soon!</div>';
     return;
   }
   var list = visiblePokemon();
   if (!list.length) {
-    grid.innerHTML = '<div class="empty">No PokÃ©mon match your filters in <b>' +
+    grid.innerHTML = '<div class="empty">No Pok&eacute;mon match your filters in <b>' +
       escapeHtml(currentSet()) + '</b>.</div>';
     return;
   }
@@ -1051,6 +1052,13 @@ function renderGrid() {
     });
     var vc = card.querySelector("[data-view]");
     if (vc) vc.addEventListener("click", function () { openLightbox(currentSet(), POKEMON[id - 1]); });
+    var p = POKEMON[id - 1]; var cset = currentSet();
+    if (p && cset) { resolveImage(cset, p, function(imgSrc) {
+      if (imgSrc) { var topDiv = card.querySelector('.top');
+        if (topDiv && !card.querySelector('.pcard-img')) {
+          var img = document.createElement('img'); img.className = 'pcard-img';
+          img.src = imgSrc; img.alt = p.name; img.loading = 'lazy';
+          topDiv.insertBefore(img, topDiv.firstChild); } } }); }
   });
 }
 
@@ -1121,7 +1129,7 @@ function resolveImage(set, p, cb) {
   if (direct) { cb(direct); return; }
   var ckey = setId + "|" + p.name;
   if (IMG_CACHE[ckey] !== undefined) { cb(IMG_CACHE[ckey] || null); return; }
-  var apiName = p.name.replace(/[â]/g, "-f").replace(/[â]/g, "-m");
+  var apiName = p.name.replace(/[♀]/g, "-f").replace(/[♂]/g, "-m");
   var url = "https://api.pokemontcg.io/v2/cards?q=" +
     encodeURIComponent('name:"' + apiName + '" set.id:' + setId) + "&select=images,number&pageSize=1";
   fetch(url).then(function (r) { return r.json(); }).then(function (j) {
@@ -1133,8 +1141,8 @@ function resolveImage(set, p, cb) {
 function openLightbox(set, p) {
   var lb = $("lightbox");
   lb.classList.add("show");
-  $("lightboxTitle").textContent = "#" + String(p.id).padStart(4, "0") + " " + p.name + " â " + set;
-  $("lightboxStage").innerHTML = '<div class="lightbox-loading">Loading card imageâ¦</div>';
+  $("lightboxTitle").textContent = "#" + String(p.id).padStart(4, "0") + " " + p.name + " &mdash; " + set;
+  $("lightboxStage").innerHTML = '<div class="lightbox-loading">Loading card image&hellip;</div>';
   $("lightboxMeta").innerHTML = "";
   if (!SET_IDS[set]) {
     $("lightboxStage").innerHTML = '<div class="lightbox-error">No image source mapped for this set.</div>';
@@ -1144,7 +1152,7 @@ function openLightbox(set, p) {
   if (hires) { showLightboxImg(hires, set); return; }
   // resolve via API to get whatever printing exists
   var setId = SET_IDS[set];
-  var apiName = p.name.replace(/[â]/g, "-f").replace(/[â]/g, "-m");
+  var apiName = p.name.replace(/[♀]/g, "-f").replace(/[♂]/g, "-m");
   var url = "https://api.pokemontcg.io/v2/cards?q=" +
     encodeURIComponent('name:"' + apiName + '" set.id:' + setId) + "&select=images,number&pageSize=1";
   fetch(url).then(function (r) { return r.json(); }).then(function (j) {
@@ -1162,7 +1170,7 @@ function showLightboxImg(src, set) {
   img.onload = function () { $("lightboxStage").innerHTML = ""; $("lightboxStage").appendChild(img); };
   img.onerror = function () { $("lightboxStage").innerHTML = '<div class="lightbox-error">Image unavailable for this exact card.</div>'; };
   img.src = src;
-  $("lightboxMeta").innerHTML = 'Source: <a href="https://pokemontcg.io" target="_blank" rel="noopener">pokemontcg.io</a> Â· Set: ' + escapeHtml(set);
+  $("lightboxMeta").innerHTML = 'Source: <a href="https://pokemontcg.io" target="_blank" rel="noopener">pokemontcg.io</a> &middot; Set: ' + escapeHtml(set);
 }
 function closeLightbox() { $("lightbox").classList.remove("show"); $("lightboxStage").innerHTML = ""; }
 
@@ -1174,7 +1182,7 @@ function renderQuickResults() {
   var q = (state.quick || "").trim().toLowerCase();
   if (!q) { box.innerHTML = ""; return; }
   var matches = POKEMON.filter(function (p) { return p.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 12);
-  if (!matches.length) { box.innerHTML = '<div class="qr-empty">No PokÃ©mon match â' + escapeHtml(q) + 'â.</div>'; return; }
+  if (!matches.length) { box.innerHTML = '<div class="qr-empty">No Pok&eacute;mon match “' + escapeHtml(q) + '”.</div>'; return; }
   box.innerHTML = matches.map(quickResultHTML).join("");
   Array.prototype.forEach.call(box.querySelectorAll(".qr"), function (row) {
     var id = parseInt(row.getAttribute("data-id"), 10);
@@ -1206,7 +1214,7 @@ function quickEnter() {
   var first = POKEMON.filter(function (p) { return p.name.toLowerCase().indexOf(q) !== -1; })[0];
   if (!first) return;
   var set = state.chosenSet[first.gen];
-  if (!rarityOf(first.name, set)) { return; } // not in its set â nothing to log
+  if (!rarityOf(first.name, set)) { return; } // not in its set &mdash; nothing to log
   markCardSet(set, first.id, "ideal");
 }
 
@@ -1220,7 +1228,7 @@ function quickResultHTML(p) {
   var dex = "#" + String(p.id).padStart(4, "0");
 
   var rarityInfo = !rarity ? '<span class="qr-notinset">Not in ' + escapeHtml(set) + '</span>'
-    : holo ? '<span class="holo-badge">â Holo Rare</span>'
+    : holo ? '<span class="holo-badge">★ Holo Rare</span>'
     : '<span class="rarity ' + rarityClass(rarity) + '">' + rarity + '</span>';
 
   var statusLabel = status === "ideal" ? "Ideal Collected" : status === "backup" ? "Backup Collected" : "Missing";
@@ -1229,9 +1237,9 @@ function quickResultHTML(p) {
   if (rarity) {
     actions =
       '<div class="qr-btns">' +
-        '<button class="' + (status === "ideal" ? "on-ideal" : "") + '" data-mark="ideal">â Ideal</button>' +
-        '<button class="' + (status === "backup" ? "on-backup" : "") + '" data-mark="backup">ð Backup</button>' +
-        '<button class="miss" data-mark="missing" title="Clear">â¬</button>' +
+        '<button class="' + (status === "ideal" ? "on-ideal" : "") + '" data-mark="ideal">&#9989; Ideal</button>' +
+        '<button class="' + (status === "backup" ? "on-backup" : "") + '" data-mark="backup">&#8635; Backup</button>' +
+        '<button class="miss" data-mark="missing" title="Clear">&#9744;</button>' +
       '</div>' +
       (entry ?
         '<div class="qr-cond">Condition:' +
@@ -1242,13 +1250,13 @@ function quickResultHTML(p) {
 
   return '' +
     '<div class="qr s-' + status + '" data-id="' + p.id + '" data-set="' + escapeHtml(set) + '">' +
-      '<div class="qr-thumb" title="View card image">ð´</div>' +
+      '<div class="qr-thumb" title="View card image">&#127540;</div>' +
       '<div class="qr-main">' +
         '<div class="qr-name"><span class="dex">' + dex + '</span>' + escapeHtml(p.name) + '</div>' +
-        '<div class="qr-sub">' + GEN_INFO[p.gen].name + ' Â· ' + GEN_INFO[p.gen].region +
-          ' Â· <span class="setpill">' + escapeHtml(set) + '</span> Â· ' + rarityInfo + '</div>' +
+        '<div class="qr-sub">' + GEN_INFO[p.gen].name + ' &middot; ' + GEN_INFO[p.gen].region +
+          ' &middot; <span class="setpill">' + escapeHtml(set) + '</span> &middot; ' + rarityInfo + '</div>' +
         '<div class="qr-status"><span class="dot ' + status + '"></span>' + statusLabel +
-          (entry ? ' Â· ' + cond : '') + '</div>' +
+          (entry ? ' &middot; ' + cond : '') + '</div>' +
       '</div>' +
       '<div class="qr-actions">' + actions + '</div>' +
     '</div>';
